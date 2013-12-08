@@ -7,5 +7,5 @@ from Cython.Distutils import build_ext
 
 setup(
   cmdclass = { 'build_ext': build_ext},
-  ext_modules = [Extension("genome_sam_collapser", ["genome_sam_collapser_v0.92.pyx"])]
+  ext_modules = [Extension("genome_sam_collapser", ["genome_sam_collapser_v0.93.pyx"])]
 )
