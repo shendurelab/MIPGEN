@@ -143,11 +143,11 @@ cdef class sam_read:
         min_position = self.start_coordinate if self.start_coordinate < self.paired_start_coordinate else self.paired_start_coordinate
         max_position = self.tlen if self.tlen > 0 else -1 * self.tlen
         current_mip_key = self.chromosome + ':' + str(min_position) + '-' + str(max_position) + "/0,0/g"
-    elif self.flag == 16 and self.chromosome + ':' + str(self.start_coordinate) + ":-" in mip_key_first_coordinate_lookup: # minus single
-      coordinates = self.chromosome + ':' + str(self.start_coordinate) + ":-" # SWITCH 0 and 16 FOR PROTON
+    elif self.flag == 16 and self.chromosome + ':' + str(self.start_coordinate) + ":+" in mip_key_first_coordinate_lookup: # plus single
+      coordinates = self.chromosome + ':' + str(self.start_coordinate) + ":+" # SWITCH 0 and 16 FOR PROTON
       current_mip_key = mip_key_first_coordinate_lookup[coordinates]
-    elif self.flag == 0 and self.chromosome + ':' + str(self.start_coordinate) + ":+" in mip_key_first_coordinate_lookup: # plus single
-      coordinates = self.chromosome + ':' + str(self.start_coordinate) + ":+"
+    elif self.flag == 0 and self.chromosome + ':' + str(self.start_coordinate) + ":-" in mip_key_first_coordinate_lookup: # minus single
+      coordinates = self.chromosome + ':' + str(self.start_coordinate) + ":-"
       current_mip_key = mip_key_first_coordinate_lookup[coordinates]
     else:
       current_mip_key = self.chromosome + ':' + str(self.start_coordinate) + '-' + str(self.start_coordinate + self.ref_length) + "/0,0/g"
@@ -242,6 +242,8 @@ cdef int read_mips(arm_sequences, uniformity_keys, mip_key_first_coordinate_look
     complexity_by_position[mip_key] = [0, 0]
     mip_summary[mip_key] = line.rstrip()
   mip_fh.close()
+  #for k,v in mip_key_first_coordinate_lookup.iteritems():
+    #print k,v
   return 0
 
 def find_dominant_start_and_cigar(dictionary):
@@ -493,14 +495,14 @@ cdef int trim_and_edit(current_read, arm_sequences={}):
   read_length = len(current_read.seq)
   current_read_start = int(current_read.start_coordinate)
   if current_read.flag & 1 == 0: 
-    if current_read.flag & 16 == 0:
-      distance_to_first_scan = int(mip_details[1].split(',')[0]) - current_read_start + mip_start
-      distance_to_final_scan = mip_stop - current_read_start - int(mip_details[1].split(',')[1])
+    if current_read.flag & 16 == 0: # minus mip
+      distance_to_first_scan = int(mip_details[1].split(',')[1]) - current_read_start + mip_start
+      distance_to_final_scan = mip_stop - current_read_start - int(mip_details[1].split(',')[0])
       if current_read.mip_key in arm_sequences.keys():
         first_arm_reference, second_arm_reference = arm_sequences[current_read.mip_key]
-    else:
-      distance_to_first_scan = int(mip_details[1].split(',')[1]) - current_read_start + mip_start
-      distance_to_final_scan = mip_stop - current_read_start - int(mip_details[0].split(',')[1])
+    else: # plus mip
+      distance_to_first_scan = int(mip_details[1].split(',')[0]) - current_read_start + mip_start
+      distance_to_final_scan = mip_stop - current_read_start - int(mip_details[1].split(',')[1])
       if current_read.mip_key in arm_sequences.keys():
         second_arm_reference, first_arm_reference = arm_sequences[current_read.mip_key]
   elif current_read.flag == 83 or current_read.flag == 163: #plus mips, read 1 and 2 
@@ -533,7 +535,6 @@ cdef int trim_and_edit(current_read, arm_sequences={}):
     elif len(arm_sequences) > 0:
       if first_arm_reference[:read_scan_start_index] != current_read.seq[:read_scan_start_index]:
         return 2 
-    
     read_scan_stop_index = find_second_arm(read_length, & distance_to_final_scan, read_scan_start_index, parsed_cigar)    
     if len(arm_sequences) > 0:
       partial_arm_length = min(len(second_arm_reference), len(current_read.seq) - read_scan_stop_index)
