@@ -5,6 +5,7 @@ demultiplex samples by either inserting index into header with mipgen_fq_cutter 
 
 ```
   paste index1.fq index2.fq | awk '(NR-1)%2==0 {print $1} (NR-1)%2==1 {print $1 $2}' > new_index.fq
+```
 
 step 2:
 use PEAR to merge paired MIP reads with overlap
