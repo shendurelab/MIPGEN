@@ -12,13 +12,16 @@ demultiplex samples by either inserting index into header with mipgen_fq_cutter 
 step 2:
 use PEAR to merge paired MIP reads with overlap
 http://bioinformatics.oxfordjournals.org/content/early/2013/11/10/bioinformatics.btt593.long
+
 step 3:
 finish preprocessing reads with mipgen_fq_cutter
 -move smmip tag to the header
 -optionally trim reads
+
 step 4:
 map with bwa (mem) to human reference at /net/shendure/vol10/nobackup/shared/alignments/bwa-0.6.1/human_g1k_hs37d5/hs37d5.fa
 -ensure version of bwa is above 0.6.1
+
 step 5:
 collapse smmip TDRGs with mipgen_smmip_collapser
 -specify output directory and prefix and tag length
