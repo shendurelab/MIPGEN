@@ -1,3 +1,5 @@
+step 0:
+convert qseq format to (gzipped) fastq format with mipgen_qseq_to_fastq
 step 1:
 demultiplex samples by either inserting index into header with mipgen_fq_cutter or splitting runs into one file per sample
 -optionally select specific index sequences (with or without 1bp Hamming distance)
