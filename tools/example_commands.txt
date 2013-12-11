@@ -11,7 +11,8 @@ Very messy example of going from qseq to collapsed/split SAMs
  2923  less ~/myvol7/beth_diag_test_120613/diag_test_tile.r2.indexed.fq 
  2924* /net/shendure/vol6/redux_mip_pipeline/pear-0.8.1-bin-32/pear -f ~/myvol7/beth_diag_test_120613/diag_test_tile.r1.indexed.fq -r ~/myvol7/beth_diag_test_120613/diag_test_tile.r2.indexed.fq -o ~/myvol7/beth_diag_test_120613/diag_test_tile.merge
  2925  less /net/shendure/vol1/home/boylee/myvol7/beth_diag_test_120613/diag_test_tile.merge.assembled.fastq
- 2926  vim ~/myvol7/asd3_miseq_compare/Qseq2fq.pl 
+ 2926  vim ~/myvol7/asd3_miseq_compare/Qseq2fq.pl
+ use the script in the directory instead of this one
  2936  vim ~/bin/src/sandbox/evan/mipgen/tools/mipgen_fq_cutter_se_v1.1.py 
  2937  python ~/bin/src/sandbox/evan/mipgen/tools/mipgen_fq_cutter_se_v1.1.py ~/myvol7/beth_diag_test_120613/diag_test_tile.merge.assembled.fastq -h
  2940  python ~/bin/src/sandbox/evan/mipgen/tools/mipgen_fq_cutter_se_v1.1.py ~/myvol7/beth_diag_test_120613/diag_test_tile.merge.assembled.fastq -m 0,5 -o ~/myvol7/beth_diag_test_120613/diag_test_tile.merge.assembled.tagged.fastq
@@ -22,6 +23,7 @@ Very messy example of going from qseq to collapsed/split SAMs
  2946  samtools view /net/shendure/vol1/home/boylee/myvol7/beth_diag_test_120613/diag_test_tile.merge.assembled.tagged.fastq.indexed.sort.bam | less
  2947  python mipgen_smmip_collapser_v1.0.py -h
  2948  echo $PYTHONPATH
+ make sure "/net/shendure/vol1/home/boylee/bin/Cython-0.19.1" is in the list
  2950  python setup.py build_ext --inplace
  2951  python mipgen_smmip_collapser_v1.0.py -h
  2952  samtools view /net/shendure/vol1/home/boylee/myvol7/beth_diag_test_120613/diag_test_tile.merge.assembled.tagged.fastq.indexed.sort.bam | python mipgen_smmip_collapser_v1.0.py 5 /net/shendure/vol1/home/boylee/myvol7/beth_diag_test_120613/diag_test_tile.collapse -ptb /net/shendure/vol1/home/boylee/myvol7/beth_diag_test_120613/gene_test.barcodes.txt -f 2 -s -m ~/myvol7/nijmegen/fixed_diagnostic_mip_design.txt -c &
