@@ -447,6 +447,7 @@ void tile_regions()
 						if (skip_ahead) continue;
 						int extension_arm_length = *it2;
 						int ligation_arm_length = arm_length_sum - extension_arm_length;
+						//cout << extension_arm_length << ":" << capture_size << ":" << feature->current_scan_start_position << endl;
 						boost::shared_ptr<PlusSVMipv4> current_plus_mip (new PlusSVMipv4 (
 							feature->chr,
 							feature->current_scan_start_position,
@@ -1168,11 +1169,12 @@ bool get_chr_fasta_sequence_using_samtools ()
 		return false;
 	}
 	string line;
-	string long_range ("");
+	string long_range;
 	getline(FEATURESEQS, line);
 	getline(FLANKINGSEQS, line);
 	for (list<Featurev5>::iterator it = features_to_scan.begin(); it != features_to_scan.end(); it++)
 	{
+		long_range="";
 		feature = &*it;
 		while(FEATURESEQS.good())
 		{
@@ -1983,7 +1985,7 @@ double predict_value(vector<double> & parameters, svm_model * model)
 //	cout << "predicting" << endl;
 	struct svm_node * x = (struct svm_node *) malloc(max_nr_attr * sizeof(struct svm_node));
 	int i = 0;
-	string line_str("0 ");
+	string line_str("0");
 	for(size_t i = 0; i < parameters.size(); i++) //feature count
 	{
 /*		if((int) i>=max_nr_attr-1)    // need one more for index = -1
@@ -1994,9 +1996,10 @@ double predict_value(vector<double> & parameters, svm_model * model)
 		x[i].index = (int) i;
 		x[i].value = parameters.at(i);*/
 //		cout << i + 1<< ":" << parameters.at(i) << " ";
-		line_str += boost::lexical_cast<string>(i + 1) + ":" + boost::lexical_cast<string>(parameters.at(i)) + " ";
+		line_str += " " + boost::lexical_cast<string>(i + 1) + ":" + boost::lexical_cast<string>(parameters.at(i));
 	}
 //	cout << endl;
+//	cout << line_str << endl;
 //	x[parameters.size()].index = -1;
 	i = 0;
 	char * line = new char[line_str.length() + 1];

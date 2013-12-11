@@ -5,8 +5,10 @@ from optparse import OptionParser
 
 parser = OptionParser("%prog read.fq [options]")
 parser.add_option("-o", "--output_prefix", type="str", help="directs output to given path")
-parser.add_option("-i", "--index_read", dest="index_file", type="str", help="truncate index read to given length")
+parser.add_option("-i", "--index_read", dest="index_file", type="str", help="index read file")
 parser.add_option("-j", "--index_length", type="int", help="truncate index read to given length")
+parser.add_option("-b", "--barcode_file", type="str", help="select barcodes in file of label<tab>sequence")
+parser.add_option("-t", "--tolerant", action="store_true", default=False, help="allow 1bp edits from provided barcodes in file")
 parser.add_option("-m", "--molecular_tag", type="str", help="molecular tag, template: \"-m 3,2\" for first 3 bases, last 2 bases")
 parser.add_option("-l", "--truncated_read_length", type="int", help="truncate reads to given length")
 parser.add_option("-L", "--skip_length", type="int", help="skip the number of bases provided (post truncation)")
@@ -20,6 +22,22 @@ if(options.partial_discard and not options.discard):
  print "-e option requires -d option"
 if(options.index_file == None and options.index_length != None):
  print "-j option requires -i option"
+
+used_barcodes = set()
+bases = "ATCGN"
+
+if(options.barcode_file != None):
+ with open(options.barcode_file, 'r') as b_in:
+  for barcode_line in b_in:
+   (barcode_label, barcode_seq) = barcode_line.rstrip().split()
+   used_barcodes.add(barcode_seq)
+   if(options.tolerant):
+    for i in range(len(barcode_seq)):
+     native_seq = list(barcode_seq)
+     for j in range(5):
+      mutated_seq = native_seq
+      mutated_seq[i] = bases[j]
+      used_barcodes.add("".join(mutated_seq))
 
 if(options.molecular_tag != None):
  molecular_tag_specs = options.molecular_tag.split(",")
@@ -58,8 +76,13 @@ with open(outfq, 'w') as out:
    barcode = "N"
   if(options.index_file != None and options.index_length != None):
    barcode = barcode[:options.index_length]
-  block[0] = block[0].replace("\n", "#" + barcode + "\n")
-  block[0] = block[0].replace(" ", "_")
+  if(options.barcode_file != None and barcode not in used_barcodes):
+   continue
+  if(options.index_file == None and re.search("#[ATGCN]+$", block[0])):
+   pass
+  else:
+   block[0] = block[0].replace("\n", "#" + barcode + "\n")
+   block[0] = block[0].replace(" ", "_")
   if(options.molecular_tag != None):
    tag = block[1][:molecular_tag_specs[0]] + block[1][len(block[1]) - molecular_tag_specs[1] - 1 : -1]
    block[0] = block[0].replace("\n", "-" + tag + "\n")
