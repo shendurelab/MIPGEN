@@ -21,7 +21,7 @@ if __name__ == "__main__":
   parser.add_option("-T", "--no_trimming", action="store_true", dest="no_trimming", default=False, help="do not remove number of bases corresponding to mip arm sequences even if mip file is provided")
   parser.add_option("-f", "--flex_space", dest="flex_space", type="int", default=0, help="searches given number of bases on either side of read start when looking to assign a read to a known MIP target")
   parser.add_option("-s", "--single_end", action="store_true", default=False, help="single end run")
-  parser.add_option("-x", "--exact_arms", action="store_true", default=False, help="only accept MIP reads with exact arm matches, default accepts any read at correct position")
+  parser.add_option("-x", "--exact_arms", action="store_true", default=False, help="only accept MIP reads with exact arm matches, default accepts any read at correct position [EXPERIMENTAL]")
 
   options, args = parser.parse_args()
  

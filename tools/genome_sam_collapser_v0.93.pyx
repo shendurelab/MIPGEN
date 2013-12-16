@@ -499,12 +499,12 @@ cdef int trim_and_edit(current_read, arm_sequences={}):
       distance_to_first_scan = int(mip_details[1].split(',')[1]) - current_read_start + mip_start
       distance_to_final_scan = mip_stop - current_read_start - int(mip_details[1].split(',')[0])
       if current_read.mip_key in arm_sequences.keys():
-        first_arm_reference, second_arm_reference = arm_sequences[current_read.mip_key]
+        second_arm_reference, first_arm_reference = arm_sequences[current_read.mip_key]
     else: # plus mip
       distance_to_first_scan = int(mip_details[1].split(',')[0]) - current_read_start + mip_start
       distance_to_final_scan = mip_stop - current_read_start - int(mip_details[1].split(',')[1])
       if current_read.mip_key in arm_sequences.keys():
-        second_arm_reference, first_arm_reference = arm_sequences[current_read.mip_key]
+        first_arm_reference, second_arm_reference = arm_sequences[current_read.mip_key]
   elif current_read.flag == 83 or current_read.flag == 163: #plus mips, read 1 and 2 
     distance_to_first_scan = -current_read_start + int(mip_details[1].split(',')[0]) + mip_start
     distance_to_final_scan = mip_stop - current_read_start - int(mip_details[1].split(',')[1])
@@ -538,7 +538,7 @@ cdef int trim_and_edit(current_read, arm_sequences={}):
     read_scan_stop_index = find_second_arm(read_length, & distance_to_final_scan, read_scan_start_index, parsed_cigar)    
     if len(arm_sequences) > 0:
       partial_arm_length = min(len(second_arm_reference), len(current_read.seq) - read_scan_stop_index)
-      if first_arm_reference[:partial_arm_length] != current_read.seq[read_scan_stop_index + 1: read_scan_stop_index + 1 + partial_arm_length]:
+      if second_arm_reference[:partial_arm_length] != current_read.seq[read_scan_stop_index + 1: read_scan_stop_index + 1 + partial_arm_length]:
         return 2
     current_read.adjust_fields(parsed_cigar, read_scan_start_index, read_scan_stop_index, distance_to_final_scan)
   return 0

@@ -465,7 +465,7 @@ void tile_regions()
 	
 						current_plus_mip->set_scan_target_seq(feature->chromosomal_sequence.substr(current_plus_mip->scan_start_position - feature->chromosomal_sequence_start_position, current_plus_mip->scan_size));		
 						current_minus_mip->set_scan_target_seq(feature->chromosomal_sequence.substr(current_minus_mip->scan_start_position - feature->chromosomal_sequence_start_position,current_minus_mip->scan_size));
-					//	cout << "ready to design\n";
+						//cout << "ready to design\n";
 						boost::shared_ptr<SVMipv4> designed_plus_mip; 
 						designed_plus_mip = design_mip(feature, current_plus_mip);
 						if(args["-score_method"] == "logistic" || args["-score_method"] == "mixed")
@@ -492,7 +492,7 @@ void tile_regions()
 						scan_strand_mip_list[designed_minus_mip->scan_start_position]["-"].push_front(designed_minus_mip);
 						if(args["-silent_mode"] != "on")
 							ALLMIPS << print_details(feature, designed_minus_mip, all_mip_counter, false);
-					//	cout << "design done!\n";	
+						//cout << "design done!\n";	
 						if (args["-score_method"] == "logistic" && args["-logistic_heuristic"] != "off" && designed_plus_mip->score < previous_plus_score && designed_minus_mip->score < previous_minus_score) skip_ahead = true;
 						previous_best_score = (designed_minus_mip->score > designed_plus_mip->score) ? designed_minus_mip->score : designed_plus_mip->score;
 						previous_minus_score = designed_minus_mip->score;
@@ -602,9 +602,8 @@ boost::shared_ptr<SVMipv4> design_mip (Featurev5 * current_feature, boost::share
 {
 	string chr = current_feature->chr;
 	current_mip->set_ext_probe_seq(current_feature->chromosomal_sequence.substr(current_mip->ext_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->extension_arm_length));
-        current_mip->set_lig_probe_seq(current_feature->chromosomal_sequence.substr(current_mip->lig_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->ligation_arm_length));
+	current_mip->set_lig_probe_seq(current_feature->chromosomal_sequence.substr(current_mip->lig_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->ligation_arm_length));
         current_mip->mip_seq = current_mip->lig_probe_sequence + universal_middle_mip_seq + current_mip->ext_probe_sequence;
-
 	string masked_ext_seq = current_feature->masked_chromosomal_sequence.substr(current_mip->ext_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->extension_arm_length);
 	string masked_lig_seq = current_feature->masked_chromosomal_sequence.substr(current_mip->lig_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->ligation_arm_length);
 	double ext_N_count = count(masked_ext_seq.begin(), masked_ext_seq.end(), 'N');
@@ -1078,7 +1077,7 @@ string get_features_to_scan()
 
 	/*for (list<Featurev5>::iterator it = features_to_scan.begin(); it != features_to_scan.end(); it++)
 	{
-		cout << it->chr << "\t" << it->start_position << endl;
+		cout << it->chr << "\t" << it->start_position << "\t";
 		cout << it->stop_position << endl;
 	}
 	*/
@@ -1095,7 +1094,7 @@ bool get_masked_features_to_scan()
 	string prefix = project_name.substr(prefix_start + 1);
 	
 	ifstream MASKEDFEATURES ((prefix + ".feature_sequences.fa.2.7.7.80.10.14.100.mask").c_str());
-	if(!(MASKEDFEATURES.is_open()))
+	if(!(MASKEDFEATURES.is_open()) || args["-trf"]=="off")
 	{
 		cerr << "[mipgen] no masked feature file found" << endl;
 		for(list<Featurev5>::iterator it = features_to_scan.begin(); it != features_to_scan.end(); it++)
@@ -2061,8 +2060,11 @@ int main(int argc, char * argv[]) {
 		mg->print_header();
 		mg->query_sequences();
 		mg->tile_regions();
-	} catch (...) {
-		cerr << "unable to tile sequences" << endl;
+	} catch (int e) {
+		cerr << "unable to tile sequences due to circumstance " << e << endl;
 		return 1;
+	} catch (exception & e) {
+		cerr << "unable to tile sequences" << endl << e.what() << endl;
 	}
+	
 }

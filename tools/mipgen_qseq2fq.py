@@ -12,7 +12,10 @@ parser.add_option("-Z", "--do_not_gzip_output",action="store_false", dest="gzip_
 if options.output_prefix != None:
   outfqname = options.output_prefix + ".fq"
 else:
-  outfqname = sys.argv[1] + ".fq"
+  if sys.argv[1].find("_1101.qseq.txt") == -1:
+    outfqname = sys.argv[1] + ".fq"
+  else:
+    outfqname = sys.argv[1].replace("_1101.qseq.txt" + ".fq")
 
 def print_with_handle(fq_out):
   for filename in sys.argv[2:]:
