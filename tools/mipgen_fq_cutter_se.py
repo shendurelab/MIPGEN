@@ -67,23 +67,27 @@ with open(outfq, 'w') as out:
     block.append(line)
   except StopIteration:
    break
+  barcode_in_header = re.search("#([ATGCN]+)(-[ATGCN]+)?$", block[0])
   if options.index_file != None:
    for i in range(4):
     index_line = i_in.next()
     index_block.append(index_line)
    barcode = index_block[1].rstrip()
+  elif barcode_in_header:
+   barcode = barcode_in_header.group(1)
   else:
    barcode = "N"
   if options.index_file != None and options.index_length != None:
    barcode = barcode[:options.index_length]
   if options.barcode_file != None and barcode not in used_barcodes:
    continue
-  if options.index_file == None and re.search("#[ATGCN]+$", block[0]):
+  if options.index_file == None and barcode_in_header:
    pass
   else:
    block[0] = block[0].replace("\n", "#" + barcode + "\n")
    block[0] = block[0].replace(" ", "_")
-  if(options.molecular_tag != None):
+  tag_in_header = re.search("#[ATGCN]+-[ATGCN]+$", block[0])
+  if(options.molecular_tag != None and not tag_in_header):
    tag = block[1][:molecular_tag_specs[0]] + block[1][len(block[1]) - molecular_tag_specs[1] - 1 : -1]
    block[0] = block[0].replace("\n", "-" + tag + "\n")
    block[1] = block[1].rstrip()[molecular_tag_specs[0]:len(block[1]) - 1 - molecular_tag_specs[1]] + "\n"
@@ -117,4 +121,5 @@ else:
  else:
   samfile = sys.argv[1] + ".indexed.sam"
 
-print "#suggested output file for alignment: " + samfile
+sys.stderr.write( "#fq cutting finished\n" )
+sys.stderr.write( "#suggested output file for alignment: " + samfile + "\n")

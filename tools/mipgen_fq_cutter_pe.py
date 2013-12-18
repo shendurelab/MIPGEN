@@ -81,32 +81,44 @@ with open(first_outfq, 'w') as first_out:
     break
    if(options.discard and (re.match("^#+$", first_block[3].rstrip()) or re.match("^#+$", second_block[3].rstrip()))):
     continue
+   barcode_in_first_header = re.search("#([ATGCN]+)(-[ATGCN]*)?$", first_block[0])
+   barcode_in_second_header = re.search("#([ATGCN]+)(-[ATGCN]*)?$", second_block[0])
    if options.index_file:
     for i in range(4):
      index_line = i_in.next()
      index_block.append(index_line)
     barcode = index_block[1].rstrip()
+   elif barcode_in_first_header and barcode_in_second_header and barcode_in_first_header.group(1) == barcode_in_second_header.group(1):
+    barcode = barcode_in_first_header.group(1)
    else:
     barcode = "N"
    if(options.index_file != None and options.index_length != None):
     barcode = barcode[:options.index_length]
    if(options.barcode_file != None and barcode not in used_barcodes):
-     continue
-   if(options.index_file == None and re.search("#[ATGCN]+$", first_block[0]) and re.search("#[ATGC]+$", second_block[0])):
+    continue
+   if(options.index_file == None and barcode_in_first_header and barcode_in_second_header):
     pass
    else:
     first_block[0] = first_block[0].replace("\n", "#" + barcode + "\n")
     first_block[0] = first_block[0].replace(" ", "_")
     second_block[0] = second_block[0].replace("\n", "#" + barcode + "\n")
     second_block[0] = second_block[0].replace(" ", "_")
+   tag_in_first_header = re.search("#[ATGCN]+-[ATGCN]+$", first_block[0])
+   tag_in_second_header = re.search("#[ATGCN]+-[ATGCN]+$", second_block[0])
    if(options.molecular_tag != None):
-    tag = first_block[1][:molecular_tag_specs[0]] + second_block[1][:molecular_tag_specs[1]]
-    first_block[0] = first_block[0].replace("\n", "-" + tag + "\n")
-    first_block[1] = first_block[1][molecular_tag_specs[0]:]
-    first_block[3] = first_block[3][molecular_tag_specs[0]:]
-    second_block[0] = second_block[0].replace("\n", "-" + tag + "\n")
-    second_block[1] = second_block[1][molecular_tag_specs[1]:]
-    second_block[3] = second_block[3][molecular_tag_specs[1]:]
+    if not tag_in_first_header and not tag_in_second_header:
+     tag = first_block[1][:molecular_tag_specs[0]] + second_block[1][:molecular_tag_specs[1]]
+     first_block[0] = first_block[0].replace("\n", "-" + tag + "\n")
+     first_block[1] = first_block[1][molecular_tag_specs[0]:]
+     first_block[3] = first_block[3][molecular_tag_specs[0]:]
+     second_block[0] = second_block[0].replace("\n", "-" + tag + "\n")
+     second_block[1] = second_block[1][molecular_tag_specs[1]:]
+     second_block[3] = second_block[3][molecular_tag_specs[1]:]
+    elif not (tag_in_first_header and tag_in_second_header):
+     sys.stderr.write("molecular tag formatting anomaly; canceling analysis\n")
+     break
+    else: # tag already present
+     pass # do nothing
    if(options.truncated_read_length != None): 
     first_block[1] = first_block[1][:options.truncated_read_length].rstrip() + "\n"
     first_block[3] = first_block[3][:options.truncated_read_length].rstrip() + "\n"
@@ -152,5 +164,5 @@ else:
  root_component = sys.argv[1][:f_shared_index]
  derived_component = sys.argv[1][f_shared_index:r_shared_index] + sys.argv[2][f_shared_index:r_shared_index]
  samfile = root_component + derived_component + ".indexed.sam"
-
-print "suggested output file for alignment: " + samfile
+sys.stderr.write( "#fq cutting finished\n" )
+sys.stderr.write( "#suggested output file for alignment: " + samfile + "\n")

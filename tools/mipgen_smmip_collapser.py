@@ -32,3 +32,4 @@ if __name__ == "__main__":
     sys.stderr.write("option 'x' requires option 'm'")
     sys.exit()
   initialize_and_iterate(options)
+  sys.stderr.write("collapsing has terminated\n")
