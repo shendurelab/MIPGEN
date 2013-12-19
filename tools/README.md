@@ -1,3 +1,19 @@
+use the mipgen pipeline builder to analyze a set or to form a template for multiple analyses
+
+edit the pipeline builder to change your desired default behavior
+alternatively, edit the output of the sh file to customize analysis
+see the options for each of the mipgen scripts by providing the -h flag
+
+mipgen_smmip_collapser outputs the performance of each sample, each mip across all samples, and each mip for each sample
+
+other tools can be used to:
+- facilitate assessing mip design quality by building a UCSC track (generate_ucsc_track.py)
+- pull out exons from a refGene file from a list of gene symbols (extract_coding_gene_exons.sh)
+- assess basewise coverage from mip analysis output (complexity_to_basewise.sh)
+- print a fasta of mip targets for specialized alignment purposes (prepare_mip_reference.py)
+
+the steps of analysis are generally as follows:
+
 step 0:
 convert qseq format to (gzipped) fastq format with mipgen_qseq_to_fastq
 

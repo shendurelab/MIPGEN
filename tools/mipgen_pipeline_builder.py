@@ -71,6 +71,7 @@ if a.startswith('y'):
   indexread = fqprefix + ".i.fq.gz"
   indexed = True
   output.write("pid2=$!\n")
+  output.write("echo \"waiting for qseq to fastq generation to finish\"\n")
   if not se:
     output.write("python mipgen_qseq2fq.py " + fqhead + " " + qdir + q3pattern + " -o " + fqprefix + ".r2 &\n")
     output.write("pid3=$!\n")
@@ -78,6 +79,7 @@ if a.startswith('y'):
     read2 = fqprefix + ".r2.fq.gz"
   output.write("wait $pid1\n")
   output.write("wait $pid2\n")
+  output.write("echo \"done waiting\"\n")
 else:
   print "what is the path to read 1?"
   read1 = sys.stdin.readline().rstrip()
@@ -116,7 +118,7 @@ if merge:
   if indexed:
     fqprefix = fqprefix + ".barcoded"
     output.write("python mipgen_fq_cutter_pe.py " + read1 + " " + read2 + " " + \
-    "-i " + indexread + \
+    "-i " + indexread + " " + \
     ("-tb " + barcodes + " " if len(barcodes) > 0 else "") + \
     "-o " + fqprefix + "\n")
     read1 = fqprefix + ".r1.indexed.fq"
@@ -185,7 +187,7 @@ output.write("samtools view -h " + bamprefix + ".bam | python mipgen_smmip_colla
   ("-c " if not split_by_barcode else "") + \
   ("-b " + barcodes + " " if len(barcodes) > 0 else "") + \
   ("-s" if se else "") + "\n")
-output.write("echo \"analysis commands have terminated\"")
+output.write("echo \"analysis commands have terminated\"\n")
 output.close()
   
 print "done building"
