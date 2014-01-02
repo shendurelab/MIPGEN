@@ -677,7 +677,7 @@ def initialize_and_iterate(options):
     if current_read.flag not in good_flags:
       file_handles["improper_pairs"].write(sam_line)
       continue
-    if re.search("^\d+S", current_read.cigar):
+    if re.search("^\d+S", current_read.cigar) and options.filter_softclips:
       softclippings += 1
       continue
     if '*' == current_read.chromosome:
