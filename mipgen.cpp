@@ -2061,7 +2061,8 @@ int main(int argc, char * argv[]) {
 		mg->query_sequences();
 		mg->tile_regions();
 	} catch (int e) {
-		cerr << "unable to tile sequences due to circumstance " << e << endl;
+		if(e == 1) { }
+		else { cerr << "unable to tile sequences due to circumstance " << e << endl; }
 		return 1;
 	} catch (exception & e) {
 		cerr << "unable to tile sequences" << endl << e.what() << endl;
