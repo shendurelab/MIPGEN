@@ -11,7 +11,7 @@ from string import maketrans
 # container for sam fields and mip information
 cdef class sam_read:
   cdef public int read_number, flag, start_coordinate, paired_start_coordinate, tlen, ref_length
-  cdef public str sam_line, mip_key, cluster, barcode, mtag, chromosome, cigar, mate_chromosome, seq, qual
+  cdef public str sam_line, mip_key, cluster, barcode, mtag, chromosome, cigar, mate_chromosome, seq, qual, read_group
   def __cinit__(self, str sam_line, mip_key_first_coordinate_lookup={}, mip_key_second_coordinate_lookup={}):
     self.sam_line = sam_line.rstrip()
     sam_fields = sam_line.split("\t")
@@ -31,6 +31,11 @@ cdef class sam_read:
     else:
       mtag_length = next((i for i, v in enumerate(sam_fields[0][mtag_index:]) if v not in "ATCGN"), len(sam_fields[0]) - 1)
       self.mtag = sam_fields[0][mtag_index:mtag_index + mtag_length]
+    for optional_field in sam_fields[11:]:
+      if optional_field[:2] == "RG":
+        self.read_group = optional_field[5:]
+        break
+      self.read_group = None
     self.flag = int(sam_fields[1])
     self.read_number = 1 if self.flag & 128 == 128 else 0
     self.chromosome = sam_fields[2]
@@ -43,6 +48,7 @@ cdef class sam_read:
     self.seq = sam_fields[9]
     self.qual = sam_fields[10]
     self.mip_key = self.lookup_mip(mip_key_first_coordinate_lookup, mip_key_second_coordinate_lookup)
+
   def trim_scan_sequences(self, distance_to_first_scan, distance_to_final_scan, parsed_cigar):
     cdef long d_t_f_s = distance_to_final_scan 
     cdef int read_length = len(self.seq)
@@ -51,11 +57,16 @@ cdef class sam_read:
       self.cigar = "0M"
       self.seq = ""
       self.qual = ""
-      return
- 
+      return 
     read_scan_stop_index = find_second_arm(read_length, & d_t_f_s, read_scan_start_index, parsed_cigar)
     self.adjust_fields(parsed_cigar, read_scan_start_index, read_scan_stop_index, d_t_f_s)
-  
+
+  def add_or_replace_readgroup(self, id):
+    if self.read_group != None:
+      self.sam_line.replace("RG:Z:" + self.read_group, "RG:Z:" + id)
+    else:
+      self.sam_line += "\tRG:Z:" + id
+
   def count_indel(self, wt_mip_counter, mutant_mip_counter):
     if 'N' in self.mtag or 'g' in self.mip_key:
       return
@@ -649,19 +660,33 @@ def initialize_and_iterate(options):
   reads_skipped = 0
   softclippings = 0
   reads_unmapped = 0
+  readgroups_printed = not options.add_or_replace_readgroups
   for sam_line in sys.stdin:
-    if(sam_line.startswith("@")):
-      if(options.barcode_file == None or options.merge_samples):
+    if not readgroups_printed:
+      if not sam_line.startswith("@") or sam_line.startswith("@PG") or sam_line.startswith("@CO"):
+        for pooled_output in ["imperfect_arms", "improper_pairs", "strange_alignments", "off_target_output", "merged_output"]:
+          if pooled_output in file_handles.keys():
+            for barcode in barcode_labels.keys():
+              file_handles[pooled_output].write("@RG\tID:" + barcode_labels[barcode] + "_" + barcode + "\tPL:illumina\tLB:MIPs\tSM:" + barcode_labels[barcode] + "\n")
+        if not options.merge_samples:
+          for barcode in barcode_labels.keys():
+            file_handles[barcode].write("@RG\tID:" + barcode_labels[barcode] + "_" + barcode + "\tPL:illumina\tLB:MIPs\tSM:" + barcode_labels[barcode] + "\n")
+        readgroups_printed = True
+    if sam_line.startswith("@"):
+      for sam_name in ["imperfect_arms", "improper_pairs", "strange_alignments", "off_target_output", "merged_output"]:
+        if sam_name in file_handles.keys():
+          file_handles[sam_name].write(sam_line)
+      if options.barcode_file == None or options.merge_samples:
         file_handles["merged_output"].write(sam_line)
       else:
-        for sam_name in ["imperfect_arms", "improper_pairs", "strange_alignments", "off_target_output", "merged_output"] + barcode_labels.keys():
+        for sam_name in barcode_labels.keys():
           if sam_name in file_handles.keys():
             file_handles[sam_name].write(sam_line)
       continue
     current_read = sam_read(sam_line, mip_key_first_coordinate_lookup, mip_key_second_coordinate_lookup)
     #print "read parsed"
-    if(options.barcode_file != None):
-      if(current_read.barcode not in barcode_lookup):
+    if options.barcode_file != None:
+      if current_read.barcode not in barcode_lookup:
         reads_skipped += 1
         continue
       else:
@@ -669,6 +694,8 @@ def initialize_and_iterate(options):
     if(options.filter_molecular_tags and re.search("[^ATCG]", current_read.mtag)):
       reads_skipped += 1
       continue
+    if options.add_or_replace_readgroups:
+      current_read.add_or_replace_readgroup(barcode_labels[current_read.barcode] + "_" + current_read.barcode)
     if (not options.single_end and (current_read.mate_chromosome != '=' or (current_read.paired_start_coordinate != 0 and abs(current_read.paired_start_coordinate - current_read.start_coordinate) > 1000))):
       if "discordant_arms" not in file_handles:
         file_handles["discordant_arms"] = open(sys.argv[2] + ".discordant_arms.sam",'w')  

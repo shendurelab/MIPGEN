@@ -19,6 +19,7 @@ if __name__ == "__main__":
   parser.add_option("-n", "--mip_reference", action="store_true", default=False, help="uses chromosome SAM field as MIP key")
   parser.add_option("-C", "--confidence_level", dest="confidence_level", type="float", default=0.9, help="controls consensus calling: confidence refers to the chance of a tag truly representing one distinct haplotype -- high confidence leads to more random sampling to reduce the chances of chimeric consensus and low confidence leads to indiscriminate consensus calling, number refers to probability of ALL site-, barcode-, and tag-stratified reads representing unique captures for that site and barcode sequence (default is 0.9)")
   parser.add_option("-T", "--no_trimming", action="store_true", dest="no_trimming", default=False, help="do not remove number of bases corresponding to mip arm sequences even if mip file is provided")
+  parser.add_option("-r", "--add_or_replace_readgroups", action="store_true", default=False, help="use the barcode file (if given) or barcode sequence to generate read groups")
   parser.add_option("-f", "--flex_space", dest="flex_space", type="int", default=0, help="searches given number of bases on either side of read start when looking to assign a read to a known MIP target")
   parser.add_option("-s", "--single_end", action="store_true", default=False, help="single end run")
   parser.add_option("-S", "--no_softclip_filtering", action="store_false", dest="filter_softclips", default=True, help="retains reads with softclipping at the beginning of the read")
@@ -28,6 +29,9 @@ if __name__ == "__main__":
  
   if options.merge_samples and not options.barcode_file:
     sys.stderr.write("option 'c' requires option 'b'")
+    sys.exit()
+  if options.add_or_replace_readgroups and not options.barcode_file:
+    sys.stderr.write("option 'r' requires option 'b'")
     sys.exit()
   if options.exact_arms and not options.mip_file:
     sys.stderr.write("option 'x' requires option 'm'")
