@@ -676,9 +676,7 @@ def initialize_and_iterate(options):
       for sam_name in ["imperfect_arms", "improper_pairs", "strange_alignments", "off_target_output", "merged_output"]:
         if sam_name in file_handles.keys():
           file_handles[sam_name].write(sam_line)
-      if options.barcode_file == None or options.merge_samples:
-        file_handles["merged_output"].write(sam_line)
-      else:
+      if options.barcode_file != None:
         for sam_name in barcode_labels.keys():
           if sam_name in file_handles.keys():
             file_handles[sam_name].write(sam_line)
