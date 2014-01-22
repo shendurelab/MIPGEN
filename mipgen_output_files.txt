@@ -1,0 +1,23 @@
+#EXPECTED OUTPUT
+<project_name>.all_mips.txt #entire search space in mip design format
+<project_name>.all_sequences.fq #entire search space in fastq format
+<project_name>.all_sequences.sai 
+<project_name>.all_sequences.sam
+<project_name>.collapsed_mips.txt #mips collapsed by position: optimal mip per position
+<project_name>.feature_sequences.fa #extracted target sequences
+<project_name>.feature_sequences.fa.2.7.7.80.10.14.100.dat #TRF outout
+<project_name>.feature_sequences.fa.2.7.7.80.10.14.100.mask #masked target sequences
+<project_name>.flanking_sequences.fa #expanded sequences for use in SVR scoring
+<project_name>.oligo_copy_count.fq #all possible oligo sequences in target
+<project_name>.oligo_copy_count.sai
+<project_name>.oligo_copy_count.sam
+<project_name>.picked_mips.txt #final set of designed mips
+<project_name>.progress.txt #log
+<project_name>.snp_data.vcf #snps downloaded via tabix
+<project_name>.snp_mips.txt #mips designed to snp loci with alternate allele
+
+#POSSIBLE OUTPUT
+<project_name>.coverage_failed.bed #gaps in coverage (first pass, on plus strand if both strands tiled)
+<project_name>.double_tile_failed.bed #gaps in double coverage (plus strand if both strands tiled)
+<project_name>.minus_strand_failed.bed #gaps in minus strand coverage (first pass)
+<project_name>.minus_strand_double_tile_failed.bed #gaps in minus strand coverage (second pass)
