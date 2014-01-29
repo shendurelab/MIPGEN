@@ -5,17 +5,17 @@ One stop MIP design and analysis
 
 Use MIPgen to design custom mip panels for target enrichment of moderate to high complexity DNA targets ranging from 120 to 250bp in size
 
-=====
+-----
 BUILD MIPGEN
-=====
+-----
 
 To build MIPgen from source, simply enter the MIPGEN directory and type 'make'
 
 The 'mipgen' executable can be used to perform designs
 
-=====
+-----
 MIPGEN PARAMETERS
-=====
+-----
 
 MIPgen accepts many options intended to maximize the flexibility of your designs
 
@@ -27,9 +27,9 @@ MIPgen offers three scoring methods based on two methods of scoring: SVR and log
 
 Run ./mipgen -doc to see the full documentation
 
-=====
+-----
 MIPGEN PITFALLS
-=====
+-----
 
 -It is not recommended to include more than 8bp total of degenerate smMIP tags. Longer tags reduce specificity and complicate MIP rebalancing, leading to less complete coverage of targeted sites.
 
@@ -39,9 +39,9 @@ MIPGEN PITFALLS
 
 -SVR scores below 1.4 and logistic scores below 0.7 rarely perform adequately. It is recommended to remove these probes from designed assays.
 
-=====
+-----
 OTHER NOTES
-=====
+-----
 
 -the subset of Boost required for compilation is included in the directory
 
