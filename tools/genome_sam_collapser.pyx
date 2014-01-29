@@ -643,6 +643,8 @@ def initialize_and_iterate(options):
   file_handles["improper_pairs"] = open(sys.argv[2] + ".improper_pairs.sam", 'w')
   file_handles["strange_alignments"] = open(sys.argv[2] + ".strange_alignments.sam", 'w')
   file_handles["off_target_output"] = open(sys.argv[2] + ".off_target_reads.sam", 'w')
+  if options.filter_softclips:
+    file_handles["softclipped_output"] = open(sys.argv[2] + ".softclipped.sam", 'w')
   if(options.barcode_file == None or options.merge_samples):
     file_handles["merged_output"] =  open(sys.argv[2] + ".all_reads.unique.sam", 'w')
   else:
@@ -658,6 +660,8 @@ def initialize_and_iterate(options):
   file_handles["samplewise_summary"].write("sample\tmip\ttotal\tunique\tsaturation\n")
   good_flags = frozenset([0,16,147,99,83,163])
   reads_skipped = 0
+  off_target_reads = 0
+  improper_pairs = 0
   softclippings = 0
   reads_unmapped = 0
   readgroups_printed = not options.add_or_replace_readgroups
@@ -701,9 +705,11 @@ def initialize_and_iterate(options):
       continue
     if current_read.flag not in good_flags:
       file_handles["improper_pairs"].write(sam_line)
+      improper_pairs += 1
       continue
-    if re.search("^\d+S", current_read.cigar) and options.filter_softclips:
+    if ((options.single_end and 'S' in current_read.cigar) or re.search("^\d+S", current_read.cigar)) and options.filter_softclips:
       softclippings += 1
+      file_handles["softclipped_output"].write(sam_line)
       continue
     if '*' == current_read.chromosome:
       reads_unmapped += 1
@@ -712,10 +718,12 @@ def initialize_and_iterate(options):
       current_read.mip_key = current_read.chromosome
     if "g" in current_read.mip_key and options.mip_file != None:
       file_handles["off_target_output"].write(sam_line)
+      off_target_reads += 1
       continue
     mip_start, mip_stop = [int(pos) for pos in current_read.mip_key.split("/")[0].split(':')[1].split('-')]
     if not options.single_end and abs(current_read.tlen) != current_read.ref_length and abs(abs(current_read.tlen) - (mip_stop - mip_start)) > options.flex_space:
       file_handles["off_target_output"].write(sam_line)
+      off_target_reads += 1
       continue
     if(options.mip_file and not options.no_trimming):
       if options.exact_arms:
@@ -724,6 +732,7 @@ def initialize_and_iterate(options):
         status = trim_and_edit(current_read)
       if status == 1:
         file_handles["improper_pairs"].write(sam_line)
+        improper_pairs += 1
         continue
       if status == 2:
         file_handles["imperfect_arms"].write(sam_line)
@@ -734,8 +743,10 @@ def initialize_and_iterate(options):
     current_read.enter_read(consensus_details, observed_sites)
   manage_sites(observed_sites, consensus_details, "done:0-0/0,0/0", uniformity_keys, barcode_labels, complexity_by_position, complexity_by_sample, mtag_population, probability_list, & all_total_reads, & all_unique_reads, file_handles, options)
   file_handles["notes"].write("%i reads skipped due to barcode or tag filters\n" % reads_skipped)
-  file_handles["notes"].write("%i reads with softclipping ignored\n" % softclippings)
+  file_handles["notes"].write("%i reads with softclipping\n" % softclippings)
   file_handles["notes"].write("%i reads unmapped\n" % reads_unmapped)
+  file_handles["notes"].write("%i reads off target\n" % off_target_reads)
+  file_handles["notes"].write("%i reads have rejected SAM flags" % improper pairs)
   if(options.mip_file != None):
     output_mip_complexity(complexity_by_position, file_handles["mipwise_summary"])
   if(options.barcode_file != None):
