@@ -81,6 +81,12 @@ with open(first_outfq, 'w') as first_out:
     break
    if(options.discard and (re.match("^#+$", first_block[3].rstrip()) or re.match("^#+$", second_block[3].rstrip()))):
     continue
+   first_block[0] = re.sub("/\d$", "", first_block[0], 1)
+   second_block[0] = re.sub("/\d$", "", second_block[0], 1)
+   if len(first_block[0]) >= len(second_block[0]): #header must be same for each read; take the longer
+    second_block[0] = first_block[0]
+   else:
+    first_block[0] = second_block[0]
    barcode_in_first_header = re.search("#([ATGCN]+)(-[ATGCN]*)?$", first_block[0])
    barcode_in_second_header = re.search("#([ATGCN]+)(-[ATGCN]*)?$", second_block[0])
    if options.index_file:
