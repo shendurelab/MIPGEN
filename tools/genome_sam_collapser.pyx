@@ -668,7 +668,7 @@ def initialize_and_iterate(options):
   for sam_line in sys.stdin:
     if not readgroups_printed:
       if not sam_line.startswith("@") or sam_line.startswith("@PG") or sam_line.startswith("@CO"):
-        for pooled_output in ["imperfect_arms", "improper_pairs", "strange_alignments", "off_target_output", "merged_output"]:
+        for pooled_output in ["imperfect_arms", "improper_pairs", "strange_alignments", "off_target_output", "merged_output", "softclipped_output"]:
           if pooled_output in file_handles.keys():
             for barcode in barcode_labels.keys():
               file_handles[pooled_output].write("@RG\tID:" + barcode_labels[barcode] + "_" + barcode + "\tPL:illumina\tLB:MIPs\tSM:" + barcode_labels[barcode] + "\n")
@@ -677,7 +677,7 @@ def initialize_and_iterate(options):
             file_handles[barcode].write("@RG\tID:" + barcode_labels[barcode] + "_" + barcode + "\tPL:illumina\tLB:MIPs\tSM:" + barcode_labels[barcode] + "\n")
         readgroups_printed = True
     if sam_line.startswith("@"):
-      for sam_name in ["imperfect_arms", "improper_pairs", "strange_alignments", "off_target_output", "merged_output"]:
+      for sam_name in ["imperfect_arms", "improper_pairs", "strange_alignments", "off_target_output", "merged_output", "softclipped_output"]:
         if sam_name in file_handles.keys():
           file_handles[sam_name].write(sam_line)
       if options.barcode_file != None:
@@ -746,7 +746,7 @@ def initialize_and_iterate(options):
   file_handles["notes"].write("%i reads with softclipping\n" % softclippings)
   file_handles["notes"].write("%i reads unmapped\n" % reads_unmapped)
   file_handles["notes"].write("%i reads off target\n" % off_target_reads)
-  file_handles["notes"].write("%i reads have rejected SAM flags" % improper pairs)
+  file_handles["notes"].write("%i reads have rejected SAM flags" % improper_pairs)
   if(options.mip_file != None):
     output_mip_complexity(complexity_by_position, file_handles["mipwise_summary"])
   if(options.barcode_file != None):
