@@ -707,10 +707,11 @@ def initialize_and_iterate(options):
       file_handles["improper_pairs"].write(sam_line)
       improper_pairs += 1
       continue
-    if ((options.single_end and 'S' in current_read.cigar) or re.search("^\d+S", current_read.cigar)) and options.filter_softclips:
-      softclippings += 1
-      file_handles["softclipped_output"].write(sam_line)
-      continue
+    if 'S' in current_read.cigar and options.filter_softclips:
+      if options.single_end or (re.search("^\d+S", current_read.cigar) and (current_read.flag == 163 or current_read.flag == 99)) or (re.search("S$", current_read.cigar) and (current_read.flag == 83 or current_read.flag == 147)):
+        softclippings += 1
+        file_handles["softclipped_output"].write(sam_line)
+        continue
     if '*' == current_read.chromosome:
       reads_unmapped += 1
       continue
@@ -737,21 +738,25 @@ def initialize_and_iterate(options):
       if status == 2:
         file_handles["imperfect_arms"].write(sam_line)
         continue
+    if options.collapse_free:
+      file_handles["trimmed_reads"].write(current_read.text() + "\n")
+      continue
     if current_read.mip_key not in observed_sites.keys():
       manage_sites(observed_sites, consensus_details, current_read.mip_key, uniformity_keys, barcode_labels, complexity_by_position, complexity_by_sample, mtag_population, probability_list, & all_total_reads, & all_unique_reads, file_handles, options) # try dumping data
     #print "current key", current_read.mip_key
     current_read.enter_read(consensus_details, observed_sites)
-  manage_sites(observed_sites, consensus_details, "done:0-0/0,0/0", uniformity_keys, barcode_labels, complexity_by_position, complexity_by_sample, mtag_population, probability_list, & all_total_reads, & all_unique_reads, file_handles, options)
+  if not options.collapse_free:
+    manage_sites(observed_sites, consensus_details, "done:0-0/0,0/0", uniformity_keys, barcode_labels, complexity_by_position, complexity_by_sample, mtag_population, probability_list, & all_total_reads, & all_unique_reads, file_handles, options)
+    if(options.mip_file != None):
+      output_mip_complexity(complexity_by_position, file_handles["mipwise_summary"])
+    if(options.barcode_file != None):
+      output_sample_complexity(complexity_by_sample, barcode_labels, file_handles["samplewise_summary"])
+    output_overall_complexity(& all_unique_reads, & all_total_reads, file_handles["samplewise_summary"])
   file_handles["notes"].write("%i reads skipped due to barcode or tag filters\n" % reads_skipped)
   file_handles["notes"].write("%i reads with softclipping\n" % softclippings)
   file_handles["notes"].write("%i reads unmapped\n" % reads_unmapped)
   file_handles["notes"].write("%i reads off target\n" % off_target_reads)
   file_handles["notes"].write("%i reads have rejected SAM flags" % improper_pairs)
-  if(options.mip_file != None):
-    output_mip_complexity(complexity_by_position, file_handles["mipwise_summary"])
-  if(options.barcode_file != None):
-    output_sample_complexity(complexity_by_sample, barcode_labels, file_handles["samplewise_summary"])
-  output_overall_complexity(& all_unique_reads, & all_total_reads, file_handles["samplewise_summary"])
   for fh in file_handles.values():
     fh.close()
 
