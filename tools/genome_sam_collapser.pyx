@@ -643,6 +643,8 @@ def initialize_and_iterate(options):
   file_handles["improper_pairs"] = open(sys.argv[2] + ".improper_pairs.sam", 'w')
   file_handles["strange_alignments"] = open(sys.argv[2] + ".strange_alignments.sam", 'w')
   file_handles["off_target_output"] = open(sys.argv[2] + ".off_target_reads.sam", 'w')
+  if options.collapse_free:
+    file_handles["collapse_free"] = open(sys.argv[2] + ".on_target_uncollapsed_reads.sam", 'w')
   if options.filter_softclips:
     file_handles["softclipped_output"] = open(sys.argv[2] + ".softclipped.sam", 'w')
   if(options.barcode_file == None or options.merge_samples):
@@ -739,7 +741,7 @@ def initialize_and_iterate(options):
         file_handles["imperfect_arms"].write(sam_line)
         continue
     if options.collapse_free:
-      file_handles["trimmed_reads"].write(current_read.text() + "\n")
+      file_handles["collapse_free"].write(current_read.text() + "\n")
       continue
     if current_read.mip_key not in observed_sites.keys():
       manage_sites(observed_sites, consensus_details, current_read.mip_key, uniformity_keys, barcode_labels, complexity_by_position, complexity_by_sample, mtag_population, probability_list, & all_total_reads, & all_unique_reads, file_handles, options) # try dumping data
