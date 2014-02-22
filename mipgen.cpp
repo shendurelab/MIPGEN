@@ -482,7 +482,7 @@ void tile_regions()
 						boost::shared_ptr<SVMipv4> designed_minus_mip;
 						designed_minus_mip = design_mip(feature, current_minus_mip);
 						if(args["-score_method"] == "logistic" || args["-score_method"] == "mixed")
-							designed_minus_mip->score = designed_plus_mip->get_score();
+							designed_minus_mip->score = designed_minus_mip->get_score();
 						else if (args["-score_method"] == "svr")
 						{
 							designed_minus_mip->get_parameters(scoring_parameters, feature->long_range_content);
@@ -793,7 +793,7 @@ string print_details (Featurev5 * feature, boost::shared_ptr<SVMipv4> mip, int m
 	ss << feature->label << "_" << setw(4) << setfill('0') << mip_index << (mip->snp_count == 1 ? ("_SNP_" + string(minor ? "b" : "a")) : "") << "\n";
 	return ss.str();
 }
-// uses bwa to collect that targets map uniquely
+// uses bwa to check that targets map uniquely
 string check_copy_numbers()
 {
 	ofstream BWAFQ ((project_name + ".all_sequences.fq").c_str());
