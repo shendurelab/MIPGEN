@@ -21,6 +21,8 @@ string reverse_comp (string seq) {
                         case 'T':
                                 rev_comp.append("A");
                                 break;
+                        default:
+                                rev_comp.append(string(1, seq[i]));
           	 	 }
         	}
        	return rev_comp;
