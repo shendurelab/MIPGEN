@@ -4,27 +4,27 @@
 using namespace std;
 
 string reverse_comp (string seq) {
-       	string rev_comp;
-        for (int i = seq.length()-1; i >= 0; i--)
-        {
-                switch(seq[i])
-                {
-                        case 'G':
-                                rev_comp.append("C");
-                                break;
-                        case 'C':
-                                rev_comp.append("G");
-                                break;
-                        case 'A':
-                                rev_comp.append("T");
-                                break;
-                        case 'T':
-                                rev_comp.append("A");
-                                break;
-                        default:
-                                rev_comp.append(string(1, seq[i]));
-          	 	 }
-        	}
+   	string rev_comp;
+	for (int i = seq.length()-1; i >= 0; i--)
+	{
+		switch(seq[i])
+		{
+			case 'G':
+				rev_comp.append("C");
+				break;
+			case 'C':
+				rev_comp.append("G");
+				break;
+			case 'A':
+				rev_comp.append("T");
+				break;
+			case 'T':
+				rev_comp.append("A");
+				break;
+			default:
+				rev_comp.append(string(1, seq[i]));
+	  	 	 }
+		}
        	return rev_comp;
 }
 MinusSVMipv4::MinusSVMipv4(string chromosome, int scan_start, int scan_stop, int ext_length, int lig_length):SVMipv4(chromosome, scan_start, scan_stop, ext_length, lig_length)

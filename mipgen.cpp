@@ -26,41 +26,43 @@ boylee@u.washington.edu
 
 using namespace std;
 
+//LIBSVM identifiers
 #define TOTAL_FEATURES 192
 static string feature_mers [] = {"A","AA","AAA","AAC","AAG","AAT","AC","ACA","ACC","ACG","AG","AGA","AGC","AGG","AGT","AT","ATA","ATC","ATG","CAG","CG","CGG","G","GAC","GAG","GC","GCG","GG","GGC","GGG","GTG","TA","TAA","TAC","TAG","TC","TCC","TCG","TG","TGA","TGC","TGG","TTC","TTG"};
 map<string,double> SVMipv4::junction_scores;
 static int max_nr_attr = 64;
+
 // comparison function for sorting BED records
 bool compare_regions_to_scan (string a, string b)
 {
-        if (a[0] == '>' || a[0] == '#') // header
-                return true;
-        else
-        {
-                string a_chr;
-                string b_chr;
-                if (a.substr(0,3) == "chr") a_chr = a.substr(3,a.find_first_of(" \t") - 3);
-                else a_chr = a.substr(0,a.find_first_of(" \t"));
-                if (b.substr(0,3) == "chr") b_chr = b.substr(3,b.find_first_of(" \t") - 3);
-                else b_chr = b.substr(0,b.find_first_of(" \t"));
+	if (a[0] == '>' || a[0] == '#') // header
+		return true;
+	else
+	{
+		string a_chr;
+		string b_chr;
+		if (a.substr(0,3) == "chr") a_chr = a.substr(3,a.find_first_of(" \t") - 3);
+		else a_chr = a.substr(0,a.find_first_of(" \t"));
+		if (b.substr(0,3) == "chr") b_chr = b.substr(3,b.find_first_of(" \t") - 3);
+		else b_chr = b.substr(0,b.find_first_of(" \t"));
 		if(a_chr != b_chr) return a_chr < b_chr;
-                else
-                {
-                        int a_start_begin_index = a.find_first_of(" \t", 0);
-                        a_start_begin_index = a.find_first_not_of(" \t", a_start_begin_index);
-                        int a_start_size = a.find_first_of(" \t", a_start_begin_index) - a_start_begin_index;
-                        if(a_start_size < 1)
-                        {
-                                a_start_size = a.length() - a_start_begin_index;
-                        }
-                        int a_start_position = boost::lexical_cast<int>(a.substr(a_start_begin_index, a_start_size));
-                        int b_start_begin_index = b.find_first_of(" \t", 0);
-                        b_start_begin_index = b.find_first_not_of(" \t", b_start_begin_index);
-                        int b_start_size = b.find_first_of(" \t", b_start_begin_index) - b_start_begin_index;
-                        int b_start_position = boost::lexical_cast<int>(b.substr(b_start_begin_index, b_start_size));
-                        return a_start_position < b_start_position;
-                }
-        }
+		else
+		{
+			int a_start_begin_index = a.find_first_of(" \t", 0);
+			a_start_begin_index = a.find_first_not_of(" \t", a_start_begin_index);
+			int a_start_size = a.find_first_of(" \t", a_start_begin_index) - a_start_begin_index;
+			if(a_start_size < 1)
+			{
+				a_start_size = a.length() - a_start_begin_index;
+			}
+			int a_start_position = boost::lexical_cast<int>(a.substr(a_start_begin_index, a_start_size));
+			int b_start_begin_index = b.find_first_of(" \t", 0);
+			b_start_begin_index = b.find_first_not_of(" \t", b_start_begin_index);
+			int b_start_size = b.find_first_of(" \t", b_start_begin_index) - b_start_begin_index;
+			int b_start_position = boost::lexical_cast<int>(b.substr(b_start_begin_index, b_start_size));
+			return a_start_position < b_start_position;
+		}
+	}
 }
 // mipgen object stores all relevant parameters, containers and functions for the purpose of MIP selection
 class mipgen{
@@ -137,23 +139,23 @@ mipgen(int argc, char * argv[]) {
 	set_default_args();
 	string parse_status = parse_command_line(argc,argv);
 	if (parse_status.length() != 0)
-        {
-                cerr << parse_status << endl;
-                throw 1;
-        }
+	{
+		cerr << parse_status << endl;
+		throw 1;
+	}
 	int a = system(args["-bwa"].c_str());
 	if (a != 256)
 	{
-        	cerr << "load bwa" << endl;
-	        throw 2;
+		cerr << "load bwa" << endl;
+		throw 2;
 	}
 	if(args["-trf"] != "off")
 	{
 		a = system(args["-trf"].c_str());
 		if (a != 65280)
 		{
-	        	cerr << "TRF directory invalid" << endl;
-        		throw 3;
+			cerr << "TRF directory invalid" << endl;
+			throw 3;
 		}
 	}
 	parse_arg_values();	
@@ -199,64 +201,64 @@ void parse_arg_values() {
 	universal_middle_mip_seq = string(lig_tag_length, 'N') + universal_constant_mip_seq + string(ext_tag_length, 'N');
 	if (args["-double_tile_strand_unaware"] == "on")
 	{
-	        double_tile = true;
+		double_tile = true;
 	}
 	if (args["-double_tile_strands_separately"] == "on")
 	{
-	        double_tile_strands_separately = true;
+		double_tile_strands_separately = true;
 	}
 	if(args.find("-svr_optimal_score") == args.end())
-	        args["-svr_optimal_score"] = "2.2";
+		args["-svr_optimal_score"] = "2.2";
 	if(args.find("-svr_priority_score") == args.end())
-	        args["-svr_priority_score"] = "1.5";
+		args["-svr_priority_score"] = "1.5";
 	if(args.find("-logistic_optimal_score") == args.end())
-	        args["-logistic_optimal_score"] = "0.98";
+		args["-logistic_optimal_score"] = "0.98";
 	if(args.find("-logistic_priotity_score") == args.end())
-	        args["-logistic_priority_score"] = "0.9";
+		args["-logistic_priority_score"] = "0.9";
 	if(args["-score_method"] != "logistic" && args["-score_method"] != "svr" && args["-score_method"] != "mixed")
 	{
-	        cerr << "invalid scoring method given" << endl;
-	        throw 4;
+		cerr << "invalid scoring method given" << endl;
+		throw 4;
 	}
 	if (has_arm_length_option)
 	{
-	        string input (args["-arm_lengths"]);
-	        vector<string> input_parse;
-	        boost::split(input_parse, input, boost::is_any_of(","));
-	        for (size_t i = 0; i < input_parse.size(); i++)
-	        {
-	                size_t boundary = input_parse.at(i).find(":");
-	                int extension_arm_length = boost::lexical_cast<int>(input_parse.at(i).substr(0, boundary));
-	                int ligation_arm_length = boost::lexical_cast<int>(input_parse.at(i).substr(boundary + 1));
-	                oligo_sizes.insert(extension_arm_length);
-	                oligo_sizes.insert(ligation_arm_length);
-	                arm_lengths_by_sum[extension_arm_length + ligation_arm_length].push_back(extension_arm_length);
-	        }
+		string input (args["-arm_lengths"]);
+		vector<string> input_parse;
+		boost::split(input_parse, input, boost::is_any_of(","));
+		for (size_t i = 0; i < input_parse.size(); i++)
+		{
+			size_t boundary = input_parse.at(i).find(":");
+			int extension_arm_length = boost::lexical_cast<int>(input_parse.at(i).substr(0, boundary));
+			int ligation_arm_length = boost::lexical_cast<int>(input_parse.at(i).substr(boundary + 1));
+			oligo_sizes.insert(extension_arm_length);
+			oligo_sizes.insert(ligation_arm_length);
+			arm_lengths_by_sum[extension_arm_length + ligation_arm_length].push_back(extension_arm_length);
+		}
 	}
 	if (has_arm_length_sum_option || !(has_arm_length_sum_option || has_arm_length_option))
 	{
-	        string input;
-	        if(has_arm_length_sum_option)
-	                input = args["-arm_length_sums"];
-	        else
-	                input = "40,41,42,43,44,45";
-	        vector<string> input_parse;
-	        boost::split(input_parse, input, boost::is_any_of(","));
-	        for (size_t i = 0; i<input_parse.size(); i++)
-	        {
-	                int arm_sum = boost::lexical_cast<int>(input_parse.at(i));
-	                for (int ligation_arm_length = boost::lexical_cast<int>(args["-lig_min_length"]); ligation_arm_length <= arm_sum - boost::lexical_cast<int>(args["-ext_min_length"]) && ligation_arm_length <= 30; ligation_arm_length++)
-	                {
-	                        int extension_arm_length = arm_sum - ligation_arm_length;
-	                        if (extension_arm_length <= 30)
-	                        {
-	                                arm_lengths_by_sum[arm_sum].push_back(extension_arm_length);
-	                                oligo_sizes.insert(extension_arm_length);
-	                                oligo_sizes.insert(ligation_arm_length);
-	                        }
-	                }
-	                arm_lengths_by_sum[arm_sum].sort();
-	        }
+		string input;
+		if(has_arm_length_sum_option)
+			input = args["-arm_length_sums"];
+		else
+			input = "40,41,42,43,44,45";
+		vector<string> input_parse;
+		boost::split(input_parse, input, boost::is_any_of(","));
+		for (size_t i = 0; i<input_parse.size(); i++)
+		{
+			int arm_sum = boost::lexical_cast<int>(input_parse.at(i));
+			for (int ligation_arm_length = boost::lexical_cast<int>(args["-lig_min_length"]); ligation_arm_length <= arm_sum - boost::lexical_cast<int>(args["-ext_min_length"]) && ligation_arm_length <= 30; ligation_arm_length++)
+			{
+				int extension_arm_length = arm_sum - ligation_arm_length;
+				if (extension_arm_length <= 30)
+				{
+					arm_lengths_by_sum[arm_sum].push_back(extension_arm_length);
+					oligo_sizes.insert(extension_arm_length);
+					oligo_sizes.insert(ligation_arm_length);
+				}
+			}
+			arm_lengths_by_sum[arm_sum].sort();
+		}
 	}
 	
 	
@@ -276,18 +278,18 @@ void parse_arg_values() {
 }
 // prints version and parameters for mipgen run
 void print_header() {
-        PROGRESS.open((project_name + ".progress.txt").c_str());
-        if(!PROGRESS.is_open())
-        {
-                cerr << "progress file could not be opened" << endl;
-                throw 5;
-        }
-        PROGRESS << __FILE__ << endl << "last numbered version: 0.9.5" << endl;
-        PROGRESS << "contact: Evan Boyle\nemail: boylee@uw.edu\n";
-        for (map<string,string>::iterator it = args.begin(); it!= args.end(); it++) 
-        {
-                PROGRESS << it->first << " " << it->second << endl;
-        }
+	PROGRESS.open((project_name + ".progress.txt").c_str());
+	if(!PROGRESS.is_open())
+	{
+		cerr << "progress file could not be opened" << endl;
+		throw 5;
+	}
+	PROGRESS << __FILE__ << endl << "last numbered version: 0.9.5" << endl;
+	PROGRESS << "contact: Evan Boyle\nemail: boylee@uw.edu\n";
+	for (map<string,string>::iterator it = args.begin(); it!= args.end(); it++) 
+	{
+		PROGRESS << it->first << " " << it->second << endl;
+	}
 }
 // collects sequence from genome reference, checks for SNPs, copy number and tandem repeats and prepares for selection
 void query_sequences(){
@@ -357,11 +359,11 @@ void query_sequences(){
 	ALLMIPS.open((project_name + ".all_mips.txt").c_str());
 
 	if (ALLMIPS.is_open())
-	        cerr << "[mipgen] file of all mips ready for write: " << project_name << ".all_mips.txt\n";
+		cerr << "[mipgen] file of all mips ready for write: " << project_name << ".all_mips.txt\n";
 	else
 	{
-	        cerr << "[mipgen] all mips file could not be opened" << endl;
-	        throw 12;
+		cerr << "[mipgen] all mips file could not be opened" << endl;
+		throw 12;
  	}
 	ALLMIPS << ">mip_key\t";
 	if(args["-score_method"] == "svr")
@@ -373,11 +375,11 @@ void query_sequences(){
 
 	COLLAPSEDMIPS.open((project_name +".collapsed_mips.txt").c_str());
 	if (COLLAPSEDMIPS.is_open())
-	        cerr << "[mipgen] file of collapsed mips ready for write: " << project_name << ".collapsed_mips.txt\n";
+		cerr << "[mipgen] file of collapsed mips ready for write: " << project_name << ".collapsed_mips.txt\n";
 	else
 	{
-	        cerr << "[mipgen] file of collapsed mips could not be opened" << endl;
-	        throw 13;
+		cerr << "[mipgen] file of collapsed mips could not be opened" << endl;
+		throw 13;
 	}
 	COLLAPSEDMIPS << ">mip_key\t";
 	if(args["-score_method"] == "logistic")
@@ -389,7 +391,7 @@ void query_sequences(){
 
 	PICKEDMIPS.open((project_name + ".picked_mips.txt").c_str());
 	if (!(PICKEDMIPS.is_open()))
-	        throw 14;
+		throw 14;
 	PICKEDMIPS << ">mip_key\t";
 	if(args["-score_method"] == "logistic")
 		PICKEDMIPS << "logistic";
@@ -432,15 +434,15 @@ void tile_regions()
 			feature->current_scan_start_position++;
 			double previous_best_score = 0;
 			for (int capture_size = max_capture_size; capture_size >= min_capture_size; capture_size -= capture_increment)
-		    {
+			{
 				if (capture_size > feature->stop_position_flanked - feature->start_position_flanked + max_mip_overlap && capture_size - capture_increment >= min_capture_size) continue;
 				if (previous_best_score > upper_score_limit) continue;
 				for (set<int>::reverse_iterator rit = arm_length_sum_set.rbegin(); rit != arm_length_sum_set.rend(); rit++)
-		        {
+				{
 					int arm_length_sum = *rit;
 					if (previous_best_score > upper_score_limit && arm_length_sum != *arm_length_sum_set.begin()) continue;
-	                int previous_minus_score = 0;
-	                int previous_plus_score = 0;
+					int previous_minus_score = 0;
+					int previous_plus_score = 0;
 					bool skip_ahead = false;
 					for(list<int>::iterator it2 = arm_lengths_by_sum[arm_length_sum].begin(); it2 != arm_lengths_by_sum[arm_length_sum].end(); it2++)
 					{
@@ -516,10 +518,10 @@ void tile_regions()
 		}
 		pick_mips(feature, scoring_parameters, model);
 		if(args["-score_method"] == "mixed")
-                {
-                        lower_score_limit = boost::lexical_cast<double>(args["-logistic_priority_score"]);
-                        upper_score_limit = boost::lexical_cast<double>(args["-logistic_optimal_score"]);
-                }
+		{
+			lower_score_limit = boost::lexical_cast<double>(args["-logistic_priority_score"]);
+			upper_score_limit = boost::lexical_cast<double>(args["-logistic_optimal_score"]);
+		}
 		//cout << "mips picked!\n";
 		scan_strand_mip_list.clear();
 		scan_strand_best_mip.clear();
@@ -535,8 +537,8 @@ void tile_regions()
 	cerr << "[mipgen] mip picking complete:\n" << project_name << ".picked_mips.txt\n and \n" << project_name << ".snp_mips.txt\n";
 	if (bad_design_count > 0)
 	{
-	        PROGRESS << "WARNING: There are " << bad_design_count << " gaps in covering supplied regions\n";
-	        cerr << "[mipgen] WARNING: There are " << bad_design_count << " gaps in covering supplied regions\n";
+		PROGRESS << "WARNING: There are " << bad_design_count << " gaps in covering supplied regions\n";
+		cerr << "[mipgen] WARNING: There are " << bad_design_count << " gaps in covering supplied regions\n";
 	}
 	if(GAPS.is_open())
 	{
@@ -569,7 +571,7 @@ void find_copy ()
 	{
 		getline(OLIGOSAM, line);
 		if (line[0] != '@' && line.length() > 1)
-        	{
+		{
 			size_t chr_start = line.find("chr", 0) + 3;
 			size_t chr_stop = line.find(":", chr_start);
 			size_t start_start = chr_stop + 1;
@@ -593,8 +595,8 @@ void find_copy ()
 				copy_chr_start_stop[chr][start][stop] = 100;
 			}
 		}
-    }
-    OLIGOSAM.close();
+	}
+	OLIGOSAM.close();
 }
 
 // gets the basic information about potential mips, used for scoring purposes
@@ -603,7 +605,7 @@ boost::shared_ptr<SVMipv4> design_mip (Featurev5 * current_feature, boost::share
 	string chr = current_feature->chr;
 	current_mip->set_ext_probe_seq(current_feature->chromosomal_sequence.substr(current_mip->ext_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->extension_arm_length));
 	current_mip->set_lig_probe_seq(current_feature->chromosomal_sequence.substr(current_mip->lig_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->ligation_arm_length));
-        current_mip->mip_seq = current_mip->lig_probe_sequence + universal_middle_mip_seq + current_mip->ext_probe_sequence;
+	current_mip->mip_seq = current_mip->lig_probe_sequence + universal_middle_mip_seq + current_mip->ext_probe_sequence;
 	string masked_ext_seq = current_feature->masked_chromosomal_sequence.substr(current_mip->ext_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->extension_arm_length);
 	string masked_lig_seq = current_feature->masked_chromosomal_sequence.substr(current_mip->lig_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->ligation_arm_length);
 	double ext_N_count = count(masked_ext_seq.begin(), masked_ext_seq.end(), 'N');
@@ -639,7 +641,7 @@ boost::shared_ptr<SVMipv4> design_mip (Featurev5 * current_feature, boost::share
 			bool flag = false; // used to track whether snp mip creation succeeded
 			string alleles = chr_snp_positions[chr][i];
 			current_mip->snp_count++;
-                        string arm_sequence (current_mip->ext_probe_sequence);
+			string arm_sequence (current_mip->ext_probe_sequence);
 			ext_probe_bases.clear();
 			ext_probe_bases = vector<char> (arm_sequence.begin(), arm_sequence.end());
 			if (alleles.length() == 2 && alleles[0] != 'N' && alleles[1] != 'N' && alleles[0] != '-' && alleles[1] != '-') // only single nucleotide transitions and transversions are supported
@@ -670,9 +672,9 @@ boost::shared_ptr<SVMipv4> design_mip (Featurev5 * current_feature, boost::share
 					char allele_2;
 					switch(alleles[1]) {
 						case 'A': allele_2 = 'T'; break;
-                                                case 'T': allele_2 = 'A'; break;
-                                                case 'G': allele_2 = 'C'; break;
-                                                case 'C': allele_2 = 'G'; break;
+						case 'T': allele_2 = 'A'; break;
+						case 'G': allele_2 = 'C'; break;
+						case 'C': allele_2 = 'G'; break;
 					}
 					if (ext_probe_bases[relative_ext_position] == allele_1)
 					{
@@ -695,67 +697,67 @@ boost::shared_ptr<SVMipv4> design_mip (Featurev5 * current_feature, boost::share
 		}
 	}
 	for (int i = current_mip->lig_probe_start; i <= current_mip->lig_probe_stop; i++)
-        {
-                if (!(chr_snp_positions[chr].empty()) && chr_snp_positions[chr].find(i) != chr_snp_positions[chr].end())
-                {
-                        bool flag = false; // used to track whether snp mip creation succeeded
-                        string alleles = chr_snp_positions[chr][i];
-                        current_mip->snp_count++;
+	{
+		if (!(chr_snp_positions[chr].empty()) && chr_snp_positions[chr].find(i) != chr_snp_positions[chr].end())
+		{
+			bool flag = false; // used to track whether snp mip creation succeeded
+			string alleles = chr_snp_positions[chr][i];
+			current_mip->snp_count++;
 			string arm_sequence (current_mip->lig_probe_sequence);
 			lig_probe_bases.clear();
 			lig_probe_bases = vector<char> (arm_sequence.begin(), arm_sequence.end());
-                        if (alleles.length() == 2 && alleles[0] != 'N' && alleles[1] != 'N' && alleles[0] != '-' && alleles[1] != '-') // only single nucleotide transitions and transversions are supported
-                        {
-                                int relative_lig_position;
-                                if (current_mip->strand == "+")
-                                {
-                                        relative_lig_position = i - current_mip->lig_probe_start;
-                                }
-                                else
-                                {
-                                        relative_lig_position = current_mip->lig_probe_stop - i;
-                                }
-                                if (lig_probe_bases[relative_lig_position] == alleles[0])
-                                {
-                                        lig_probe_bases[relative_lig_position] = alleles[1];
-                                        flag = true;
-                                }
+			if (alleles.length() == 2 && alleles[0] != 'N' && alleles[1] != 'N' && alleles[0] != '-' && alleles[1] != '-') // only single nucleotide transitions and transversions are supported
+			{
+				int relative_lig_position;
+				if (current_mip->strand == "+")
+				{
+					relative_lig_position = i - current_mip->lig_probe_start;
+				}
+				else
+				{
+					relative_lig_position = current_mip->lig_probe_stop - i;
+				}
+				if (lig_probe_bases[relative_lig_position] == alleles[0])
+				{
+					lig_probe_bases[relative_lig_position] = alleles[1];
+					flag = true;
+				}
 				else // snp file might have allele on minus strand
-                                {
-                                        char allele_1;
-                                        switch(alleles[0]) {
-                                                case 'A': allele_1 = 'T'; break;
-                                                case 'T': allele_1 = 'A'; break;
-                                                case 'G': allele_1 = 'C'; break;
-                                                case 'C': allele_1 = 'G'; break;
-                                        }
-                                        char allele_2;
-                                        switch(alleles[1]) {
-                                                case 'A': allele_2 = 'T'; break;
-                                                case 'T': allele_2 = 'A'; break;
-                                                case 'G': allele_2 = 'C'; break;
-                                                case 'C': allele_2 = 'G'; break;
-                                        }
-                                        if (lig_probe_bases[relative_lig_position] == allele_1)
-                                        {
-                                                lig_probe_bases[relative_lig_position] = allele_2;
-                                                flag = true;
-                                        }
-                                }
-                        }
-                        if (flag)
-                        {
+				{
+					char allele_1;
+					switch(alleles[0]) {
+						case 'A': allele_1 = 'T'; break;
+						case 'T': allele_1 = 'A'; break;
+						case 'G': allele_1 = 'C'; break;
+						case 'C': allele_1 = 'G'; break;
+					}
+					char allele_2;
+					switch(alleles[1]) {
+						case 'A': allele_2 = 'T'; break;
+						case 'T': allele_2 = 'A'; break;
+						case 'G': allele_2 = 'C'; break;
+						case 'C': allele_2 = 'G'; break;
+					}
+					if (lig_probe_bases[relative_lig_position] == allele_1)
+					{
+						lig_probe_bases[relative_lig_position] = allele_2;
+						flag = true;
+					}
+				}
+			}
+			if (flag)
+			{
 				current_mip->has_snp_mip = true;
 				current_mip->snp_ext_sequence = current_mip->ext_probe_sequence;
-                                current_mip->snp_lig_sequence = string(lig_probe_bases.begin(), lig_probe_bases.end());
+				current_mip->snp_lig_sequence = string(lig_probe_bases.begin(), lig_probe_bases.end());
 				current_mip->snp_mip_sequence = current_mip->snp_lig_sequence + universal_middle_mip_seq + current_mip->snp_ext_sequence;
-                        }
+			}
 
-                        else // this will flag the necesary mip as having a snp with no alternate mip provided
-                        {
-                                current_mip->snp_failed = '1';
-                        }
-                }
+			else // this will flag the necesary mip as having a snp with no alternate mip provided
+			{
+				current_mip->snp_failed = '1';
+			}
+		}
 	}
 	if (current_mip->snp_count > 1)
 		current_mip->snp_failed = '1';
@@ -811,28 +813,28 @@ string check_copy_numbers()
 		for (int capture_size = max_capture_size; capture_size >= min_capture_size; capture_size -= capture_increment)
 		{
 			int current_mip_start = feature->start_position_flanked - capture_size;
-	        	while (current_mip_start < feature->stop_position_flanked)
-        		{
-	        	        BWAFQ << "@" << capture_size << "_" << feature->chr << "_" << current_mip_start << endl;
+			while (current_mip_start < feature->stop_position_flanked)
+			{
+				BWAFQ << "@" << capture_size << "_" << feature->chr << "_" << current_mip_start << endl;
 				BWAFQ << feature->chromosomal_sequence.substr(current_mip_start - feature->chromosomal_sequence_start_position, capture_size) << endl;
-	                	BWAFQ << "+\n";
+				BWAFQ << "+\n";
 				for (int i = 0; i < capture_size; i++) BWAFQ << "#";
 				BWAFQ << endl;
-	                	current_mip_start++;
-	        	}
+				current_mip_start++;
+			}
 		}
 		for (set<int>::iterator it = oligo_sizes.begin(); it != oligo_sizes.end(); it++)
-        	{
+		{
 			int oligo_size = *it;
-                	for(unsigned int relative_start_position = 0; relative_start_position < feature->chromosomal_sequence.length() - oligo_size; relative_start_position++)
-	                {
-        	                ARMSFQ << "@chr" << chr << ":" << (feature->chromosomal_sequence_start_position + relative_start_position) << "-" << (feature->chromosomal_sequence_start_position + relative_start_position + oligo_size - 1) << endl;
-                	        ARMSFQ << feature->chromosomal_sequence.substr(relative_start_position, oligo_size) << endl;
-                        	ARMSFQ << "+\n";
+			for(unsigned int relative_start_position = 0; relative_start_position < feature->chromosomal_sequence.length() - oligo_size; relative_start_position++)
+			{
+				ARMSFQ << "@chr" << chr << ":" << (feature->chromosomal_sequence_start_position + relative_start_position) << "-" << (feature->chromosomal_sequence_start_position + relative_start_position + oligo_size - 1) << endl;
+				ARMSFQ << feature->chromosomal_sequence.substr(relative_start_position, oligo_size) << endl;
+				ARMSFQ << "+\n";
 							for (int i=0; i < oligo_size; i++) ARMSFQ << "#";
 							ARMSFQ << endl;
-        	        }
-        	}
+			}
+		}
 	}
 	BWAFQ.close();
 	ARMSFQ.close();
@@ -853,17 +855,16 @@ string check_copy_numbers()
 		unsigned int line_len = line.length();
 		if(line_len < 2) continue;
 		if(line.find("X0:i:1",0) >= line_len - 1 || line.find("X1:i:0",0) >= line_len - 1) // first regex: ignore header lines. second regex: reject non-unique mappings. third regex: reject mappings that are non-unique with 1 bp edits 
-        	{
-	                string size_chr_and_pos = line.substr(0, line.find("\t"));
+		{
+			string size_chr_and_pos = line.substr(0, line.find("\t"));
 			size_t sep1 = size_chr_and_pos.find("_", 0);
 			size_t sep2 = size_chr_and_pos.find("_", sep1 + 1);
 			int size = boost::lexical_cast<int>(size_chr_and_pos.substr(0, sep1));
 			string chr = size_chr_and_pos.substr(sep1 + 1, sep2 - sep1 - 1);
 			int pos = boost::lexical_cast<int>(size_chr_and_pos.substr(sep2 + 1));
-			
-                	unmappable_positions[size][chr].insert(pos);
+			unmappable_positions[size][chr].insert(pos);
 			bad_site_counter++;
-        	}
+		}
 	}
 	CAPTURESAM.close();
 	stringstream i;
@@ -880,7 +881,7 @@ void load_chr_snps()
 	string current_chr = features_to_scan.front().chr;
 	string previous_chr;
 	string start_str;
-    string stop_str;
+	string stop_str;
 	Featurev5 * feature;
 	for (list<Featurev5>::iterator it = features_to_scan.begin(); it != features_to_scan.end(); it++)
 	{
@@ -915,7 +916,6 @@ void load_chr_snps()
 	start_str = start_ss.str();
 	stop_str = stop_ss.str();
 	query.append( current_chr + ":" + start_str + "-" + stop_str + " ");
-    
 	//PROGRESS << "tabix query: " << endl << query << endl;
 	if(args["-download_tabix_index"] == "on")
 	{
@@ -986,33 +986,33 @@ void load_given_snps()
 			getline(GIVENSNPS, line);
 			if(line.length() < 2 or line[0] == '#') continue;
 			int start_position = 0;
-                	int stop_position = line.find_first_of(" \t", 0);
-                	string chr = line.substr(start_position, stop_position);
-                	start_position = stop_position + 1;
-                	stop_position = line.find_first_of(" \t", start_position);
+			int stop_position = line.find_first_of(" \t", 0);
+			string chr = line.substr(start_position, stop_position);
+			start_position = stop_position + 1;
+			stop_position = line.find_first_of(" \t", start_position);
 			//cout << line.substr(start_position, stop_position - start_position) << endl;
-                	int position = boost::lexical_cast<int>(line.substr(start_position, stop_position - start_position));
-                	start_position = stop_position + 1;
-                	stop_position = line.find_first_of(" \t", start_position);
-                	start_position = stop_position + 1;
-                	stop_position = line.find_first_of(" \t", start_position);
-                	string ref_allele = line.substr(start_position, stop_position - start_position);
-                	start_position = stop_position + 1;
-                	stop_position = line.find_first_of(" \t", start_position);
-                	string alt_allele = line.substr(start_position, stop_position - start_position);
-                	string alleles_content = ref_allele + alt_allele;
-                	if (ref_allele.length() > 1) // indel
-                	{
-                        	for (unsigned int i = 1; i < ref_allele.length(); i++)
-                        	{
-                                	chr_snp_positions[chr][position + i] = alleles_content;
-                        	}
-                	}
-                	else
-                	{
-                       		chr_snp_positions[chr][position] = alleles_content;
-                	}
-                	snp_load_count++;
+			int position = boost::lexical_cast<int>(line.substr(start_position, stop_position - start_position));
+			start_position = stop_position + 1;
+			stop_position = line.find_first_of(" \t", start_position);
+			start_position = stop_position + 1;
+			stop_position = line.find_first_of(" \t", start_position);
+			string ref_allele = line.substr(start_position, stop_position - start_position);
+			start_position = stop_position + 1;
+			stop_position = line.find_first_of(" \t", start_position);
+			string alt_allele = line.substr(start_position, stop_position - start_position);
+			string alleles_content = ref_allele + alt_allele;
+			if (ref_allele.length() > 1) // indel
+			{
+				for (unsigned int i = 1; i < ref_allele.length(); i++)
+				{
+					chr_snp_positions[chr][position + i] = alleles_content;
+				}
+			}
+			else
+			{
+		 		chr_snp_positions[chr][position] = alleles_content;
+			}
+			snp_load_count++;
 		}
 		GIVENSNPS.close();
 	}
@@ -1027,7 +1027,7 @@ string get_features_to_scan()
 	ifstream FH (regions_to_scan.c_str());
 	if(FH.is_open()) cerr << "[mipgen] success on opening region file" << endl;
 	else return "";
-        while(FH.good())
+	while(FH.good())
 	{
 		getline(FH,details);
 	//	cout << details << endl;
@@ -1045,14 +1045,14 @@ string get_features_to_scan()
 		default_label = default_label.substr(default_label.rfind("/") + 1);
 	}
 	for (list<string>::iterator it = regions_to_scan_contents.begin(); it != regions_to_scan_contents.end(); it++)
-    	{
-                string line (*it);
+	{
+		string line (*it);
 		string label;
 		boost::trim(line);	
 		if (line[0] == '>' || line[0] == '#' || line.find_first_not_of(" \t\n") > line.length()) // header
-                	continue;
+			continue;
 		else
-        	{
+		{
 			boost::split(bed_fields, line, boost::is_any_of(" \t"), boost::token_compress_on);
 			label = bed_fields.size() > 3 ? label = bed_fields.at(3) : default_label;
 			string chr;
@@ -1069,10 +1069,10 @@ string get_features_to_scan()
 			else
 			{
 				Featurev5 current_feature (chr, boost::lexical_cast<int>(bed_fields.at(1)) + 1,boost::lexical_cast<int>(bed_fields.at(2)), feature_flank, label);
-	                        features_to_scan.push_back(current_feature);
+				features_to_scan.push_back(current_feature);
 			}
-        	}
-    	}
+		}
+	}
 	
 
 	/*for (list<Featurev5>::iterator it = features_to_scan.begin(); it != features_to_scan.end(); it++)
@@ -1215,11 +1215,11 @@ bool get_chr_fasta_sequence_from_genome_dir (string genome_dir)
 	{
 		feature = &*it;
 		if (!(chr == feature->chr))
-        {
-        	chr_sequence = "";
+		{
+			chr_sequence = "";
 			chr = feature->chr;
 			chr_fasta = genome_dir + "/chr" + chr + ".fa";
-		    //cout << chr_fasta << endl;
+			//cout << chr_fasta << endl;
 			ifstream FH (chr_fasta.c_str());
 			if (!(FH.is_open())) 
 			{
@@ -1227,7 +1227,7 @@ bool get_chr_fasta_sequence_from_genome_dir (string genome_dir)
 				return false;
 			}
 			string line;
-        	while(FH.good())
+			while(FH.good())
 			{
 				getline(FH, line);
 				if (line[0]=='>') continue;
@@ -1236,7 +1236,7 @@ bool get_chr_fasta_sequence_from_genome_dir (string genome_dir)
 					chr_sequence.append(line);
 				}
 			}
-        		FH.close();
+			FH.close();
 		}
 		int feature_length = feature->stop_position_flanked + max_capture_size - (feature->start_position_flanked - max_capture_size) + 15; // 15 is the maximum difference between arm lengths, which extends the bases needed slightly
 
@@ -1385,10 +1385,10 @@ Miscellaneous:\n\
 	bool check_file = false;
 	bool option_found;
 	for ( int i = 0; i < argc; i++)
-    	{
-        	if (argv[i][0] == '-')
-        	{
-                	string parameter (argv[i]);
+	{
+		if (argv[i][0] == '-')
+		{
+			string parameter (argv[i]);
 			size_t j = 0;
 			option_found = false;
 			while(!(option_found))
@@ -1408,7 +1408,7 @@ Miscellaneous:\n\
 			else if (parameter == "-arm_length_sums") has_arm_length_sum_option = true; 
 			else if (parameter == "-arm_lengths") has_arm_length_option = true;
 		}
-    	}
+	}
 	if (check_file)
 	{
 		ifstream PARAMETERS (args["-file_of_parameters"].c_str());
@@ -1427,16 +1427,16 @@ Miscellaneous:\n\
 				size_t j = 0;
 				string parameter = line.substr(0,boundary);
 				option_found = false;
-    	        while(!(option_found))
-                {
-                    if(j == option_vector.size()) break;
-                	if(option_vector.at(j) == parameter) option_found = true;
-        	        j++;
-    	        }
-                if(!(option_found))
-                {
-                	return parameter + " not recognized as valid option\n";
-            	}
+				while(!(option_found))
+				{
+					if(j == option_vector.size()) break;
+					if(option_vector.at(j) == parameter) option_found = true;
+					j++;
+				}
+				if(!(option_found))
+				{
+					return parameter + " not recognized as valid option\n";
+				}
 				string value = line.substr(boundary + 1,line.length()); 
 				args[parameter] = value;
 				if (parameter == "-arm_length_sums") has_arm_length_sum_option = true;
@@ -1447,7 +1447,7 @@ Miscellaneous:\n\
 	}
 	//for (map<string,string>::iterator it = args.begin(); it!=args.end(); it++)
 	//{ cout << it->first << "\t" << it->second << endl; }
-        string necessary_parameters [] = 
+	string necessary_parameters [] = 
 	{	
 		"-regions_to_scan",
 		"-project_name",
@@ -1506,15 +1506,15 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 	{
 		picked_mip = optimize_worst_in_region(feature, positions_to_scan_minus, 1);
 		while (!(positions_to_scan_minus.empty()) && picked_mip != 0 && picked_mip->score < lower_score_limit)
-    	{
-        	manage_picked_mip(feature, picked_mip, positions_to_scan_minus);
-            picked_mip = optimize_worst_in_region(feature, positions_to_scan_minus, 1);
-            if(args["-score_method"] == "mixed" && picked_mip != 0)
+	{
+		manage_picked_mip(feature, picked_mip, positions_to_scan_minus);
+		picked_mip = optimize_worst_in_region(feature, positions_to_scan_minus, 1);
+		if(args["-score_method"] == "mixed" && picked_mip != 0)
 			{
 				picked_mip->get_parameters(scoring_parameters, feature->long_range_content);
 				picked_mip->score = predict_value(scoring_parameters, model);
 			}	
-    	}
+	}
 	}
 	// cout << "optimizing done" << endl;
 	if (!(positions_to_scan.empty()))
@@ -1528,11 +1528,11 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 	if (!(positions_to_scan_minus.empty()))
 	{
 		do
-                {
-                    picked_mip = translocate_down_region(feature, positions_to_scan_minus, scoring_parameters, model, 1);
-                    if (picked_mip != 0) manage_picked_mip(feature, picked_mip, positions_to_scan_minus);
-                } while (!(positions_to_scan_minus.empty()) && picked_mip != 0);
-        }
+		{
+			picked_mip = translocate_down_region(feature, positions_to_scan_minus, scoring_parameters, model, 1);
+			if (picked_mip != 0) manage_picked_mip(feature, picked_mip, positions_to_scan_minus);
+		} while (!(positions_to_scan_minus.empty()) && picked_mip != 0);
+	}
 	if (double_tile)
 	{
 		do
@@ -1544,11 +1544,11 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 		if (double_tile_strands_separately)
 		{
 			do
-	                {
-        	                picked_mip = translocate_down_region(feature,positions_to_scan_again, scoring_parameters, model, 1);
-                	        //cout << "iteration, picked mip = " << picked_mip << endl;
-                        	if (picked_mip != 0) manage_picked_mip(feature, picked_mip, positions_to_scan_minus_again);
-	                } while (!(positions_to_scan_minus_again.empty()) && picked_mip != 0);
+			{
+				picked_mip = translocate_down_region(feature,positions_to_scan_again, scoring_parameters, model, 1);
+				//cout << "iteration, picked mip = " << picked_mip << endl;
+				if (picked_mip != 0) manage_picked_mip(feature, picked_mip, positions_to_scan_minus_again);
+			} while (!(positions_to_scan_minus_again.empty()) && picked_mip != 0);
 		}
 	}
 	if (!(positions_to_scan.empty()))
@@ -1558,11 +1558,11 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 			GAPS.open((args["-project_name"] + ".coverage_failed.bed").c_str());
 		}
 		PROGRESS << "BASES NOT COVERED ON CHROMOSOME " << feature->chr << ":\n";
-                bad_design_count++;
+		bad_design_count++;
 		int start = *positions_to_scan.begin();
 		int stop = start - 1;
-                for (set<int>::iterator it = positions_to_scan.begin(); it != positions_to_scan.end(); it++)
-                {
+		for (set<int>::iterator it = positions_to_scan.begin(); it != positions_to_scan.end(); it++)
+		{
 			if (*it == stop + 1)
 			{
 				stop++;
@@ -1573,7 +1573,7 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 				start = *it;
 				stop = *it;
 			}
-                }
+		}
 		GAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
 	}
 	if (!(positions_to_scan_again.empty()))
@@ -1586,7 +1586,7 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 		int start = *positions_to_scan_again.begin();
 		int stop = start - 1;
 		for (set<int>::iterator it = positions_to_scan_again.begin(); it != positions_to_scan_again.end(); it++)
-                {
+		{
 			if (*it == stop + 1)
 			{
 				stop++;
@@ -1597,7 +1597,7 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 				start = *it;
 				stop = *it;
 			}
-                }
+		}
 		DOUBLEGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
 	}	
 	if (!(positions_to_scan_minus.empty()))
@@ -1616,11 +1616,11 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 				stop++;
 			}
 			else
-            {
-                    MINUSGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-                    start = *it;
-                    stop = *it;
-            }
+			{
+				MINUSGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
+				start = *it;
+				stop = *it;
+			}
 		}
 		MINUSGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
 	}
@@ -1707,33 +1707,33 @@ void condense_mips(Featurev5 * feature)
 {
 	PROGRESS << "condensing feature #" << feature_counter << endl;
 	string strands [] = {"+","-"};
-	for(map<int, map<string, list<boost::shared_ptr<SVMipv4> > > >::iterator it = scan_strand_mip_list.begin(); it != scan_strand_mip_list.end(); it++)      
-    {
+	for(map<int, map<string, list<boost::shared_ptr<SVMipv4> > > >::iterator it = scan_strand_mip_list.begin(); it != scan_strand_mip_list.end(); it++)  
+	{
 		int position = it->first;
 		int chosen_copy_count;
 		int current_arm_copy_count;
 		double chosen_masked_arm_proportion;
 		double current_masked_arm_proportion;
-    	for (int i = 0; i < 2; i++)
-        {
+		for (int i = 0; i < 2; i++)
+		{
 			bool skip_ahead = false;
 			string strand = strands[i];
-            for (list<boost::shared_ptr<SVMipv4> >::iterator it2 = scan_strand_mip_list[position][strand].begin(); it2 !=  scan_strand_mip_list[position][strand].end(); it2++)
-        	{
+			for (list<boost::shared_ptr<SVMipv4> >::iterator it2 = scan_strand_mip_list[position][strand].begin(); it2 !=  scan_strand_mip_list[position][strand].end(); it2++)
+			{
 				if (skip_ahead) continue;
 				boost::shared_ptr<SVMipv4> current_mip = *it2;
 				if (current_mip->ext_probe_copy * current_mip->lig_probe_copy > max_arm_copy) continue;
-                if (current_mip->mapping_failed == '0')
-                {
-                	current_arm_copy_count = (current_mip->ext_probe_copy > current_mip->lig_probe_copy) ? current_mip->ext_probe_copy : current_mip->lig_probe_copy;
+				if (current_mip->mapping_failed == '0')
+				{
+					current_arm_copy_count = (current_mip->ext_probe_copy > current_mip->lig_probe_copy) ? current_mip->ext_probe_copy : current_mip->lig_probe_copy;
 					current_masked_arm_proportion = current_mip->arm_fraction_masked;
 					
 					if (scan_strand_best_mip.empty() || scan_strand_best_mip[position].find(strand) == scan_strand_best_mip[position].end())
-                    {
-                    	scan_strand_best_mip[position][strand] = current_mip;
+					{
+						scan_strand_best_mip[position][strand] = current_mip;
 						chosen_masked_arm_proportion = current_masked_arm_proportion;
 						chosen_copy_count = current_arm_copy_count;
-                    }
+					}
 					else if (current_masked_arm_proportion > boost::lexical_cast<double>(args["-masked_arm_threshold"]) && current_masked_arm_proportion < chosen_masked_arm_proportion)
 					{
 						scan_strand_best_mip[position][strand] = current_mip;
@@ -1754,7 +1754,7 @@ void condense_mips(Featurev5 * feature)
 							{
 								scan_strand_best_mip[position][strand] = current_mip;
 								chosen_masked_arm_proportion = current_masked_arm_proportion;
-		                                                chosen_copy_count = current_arm_copy_count;
+								chosen_copy_count = current_arm_copy_count;
 							}
 							else if (current_mip->score > lower_score_limit)
 							{
@@ -1762,7 +1762,7 @@ void condense_mips(Featurev5 * feature)
 								{
 									scan_strand_best_mip[position][strand] = current_mip;
 									chosen_masked_arm_proportion = current_masked_arm_proportion;
-			                                                chosen_copy_count = current_arm_copy_count;
+									chosen_copy_count = current_arm_copy_count;
 								}
 								else if (current_mip->snp_count == scan_strand_best_mip[position][strand]->snp_count)
 								{
@@ -1775,10 +1775,10 @@ void condense_mips(Featurev5 * feature)
 							}
 						}
 					}
-                }
-            }
-        }
-    }
+				}
+			}
+		}
+	}
 }				
 // returns the mip with the lowest optimized score for a position
 boost::shared_ptr<SVMipv4> optimize_worst_in_region (Featurev5 * feature, set<int> & positions_to_scan, int strand_to_use)
@@ -1794,7 +1794,7 @@ boost::shared_ptr<SVMipv4> optimize_worst_in_region (Featurev5 * feature, set<in
 		map<string, boost::shared_ptr<SVMipv4> > mips_at_interrogated_position = pos_strand_best_mip[interrogated_position];	
 		boost::shared_ptr<SVMipv4> current_stranded_mip;
 		boost::shared_ptr<SVMipv4> current_plus_mip;
-        boost::shared_ptr<SVMipv4> current_minus_mip;
+		boost::shared_ptr<SVMipv4> current_minus_mip;
 		bool minus_mip_set = false;
 		bool plus_mip_set = false;
 
@@ -1805,10 +1805,10 @@ boost::shared_ptr<SVMipv4> optimize_worst_in_region (Featurev5 * feature, set<in
 			if (chr_strand_pos_used_arm_bases.find(chr) != chr_strand_pos_used_arm_bases.end() && chr_strand_pos_used_arm_bases[chr].find("+") != chr_strand_pos_used_arm_bases[chr].end())
 			{
 				for (int position_to_occupy = current_plus_mip->ext_probe_start; position_to_occupy <= current_plus_mip->ext_probe_stop; position_to_occupy++)
-                {
-         	       	if (chr_strand_pos_used_arm_bases[chr]["+"].count(position_to_occupy) == 1) plus_mip_set = false;
+				{
+				   	if (chr_strand_pos_used_arm_bases[chr]["+"].count(position_to_occupy) == 1) plus_mip_set = false;
 				}
-            }
+			}
 			if (chr_strand_pos_used_arm_bases.find(chr) != chr_strand_pos_used_arm_bases.end() && chr_strand_pos_used_arm_bases[chr].find("+") != chr_strand_pos_used_arm_bases[chr].end())
 			{
 				for (int position_to_occupy = current_plus_mip->lig_probe_start; position_to_occupy <= current_plus_mip->lig_probe_stop; position_to_occupy++)
@@ -1819,32 +1819,32 @@ boost::shared_ptr<SVMipv4> optimize_worst_in_region (Featurev5 * feature, set<in
 			if (plus_mip_set) current_stranded_mip = current_plus_mip;
 		}
 		if (pos_strand_best_mip[interrogated_position].find("-") != pos_strand_best_mip[interrogated_position].end() && strand_to_use != 0)
-        {
-            current_minus_mip = pos_strand_best_mip[interrogated_position]["-"];
+		{
+			current_minus_mip = pos_strand_best_mip[interrogated_position]["-"];
 			minus_mip_set = true;
 			if (chr_strand_pos_used_arm_bases.find(chr) != chr_strand_pos_used_arm_bases.end() && chr_strand_pos_used_arm_bases[chr].find("-") != chr_strand_pos_used_arm_bases[chr].end())
 
 			{
 				for (int position_to_occupy = current_minus_mip->ext_probe_start; position_to_occupy <= current_minus_mip->ext_probe_stop; position_to_occupy++)
-               	{
-                    if (chr_strand_pos_used_arm_bases[chr]["-"].count(position_to_occupy) == 1) minus_mip_set = false;
+				{
+					if (chr_strand_pos_used_arm_bases[chr]["-"].count(position_to_occupy) == 1) minus_mip_set = false;
 				}
-            }
+			}
 			if (chr_strand_pos_used_arm_bases.find(chr) != chr_strand_pos_used_arm_bases.end() && chr_strand_pos_used_arm_bases[chr].find("-") != chr_strand_pos_used_arm_bases[chr].end())
 			{
 				for (int position_to_occupy = current_minus_mip->lig_probe_start; position_to_occupy <= current_minus_mip->lig_probe_stop; position_to_occupy++)
-                {
-                	if (chr_strand_pos_used_arm_bases[chr]["-"].count(position_to_occupy) == 1) minus_mip_set = false;
+				{
+					if (chr_strand_pos_used_arm_bases[chr]["-"].count(position_to_occupy) == 1) minus_mip_set = false;
 				}
-            }
-            if (minus_mip_set)
+			}
+			if (minus_mip_set)
 			{
 				if(plus_mip_set)
 					current_stranded_mip = (current_plus_mip->score > current_minus_mip->score) ? current_plus_mip : current_minus_mip;
 				else
 					current_stranded_mip = current_minus_mip;
 			}
-        }
+		}
 		if ((plus_mip_set || minus_mip_set) && (!(worst_mip_set) || current_stranded_mip->score < mip_for_worst_position->score))
 		{
 			mip_for_worst_position = current_stranded_mip;
@@ -1869,16 +1869,16 @@ boost::shared_ptr<SVMipv4> translocate_down_region (Featurev5 * feature, set<int
 		earliest_scan_position = feature->stop_position_flanked - min_scan_size + 1;
 		preliminary_scan_position = earliest_scan_position;
 		direction = 1;
-        while (scan_strand_best_mip.find(preliminary_scan_position) == scan_strand_best_mip.end() && preliminary_scan_position <= latest_scan_position) preliminary_scan_position++;
+	while (scan_strand_best_mip.find(preliminary_scan_position) == scan_strand_best_mip.end() && preliminary_scan_position <= latest_scan_position) preliminary_scan_position++;
 	}
 	else
 	{
-        earliest_scan_position = latest_scan_position - max_mip_overlap;
-        preliminary_scan_position = latest_scan_position - starting_mip_overlap;
+		earliest_scan_position = latest_scan_position - max_mip_overlap;
+		preliminary_scan_position = latest_scan_position - starting_mip_overlap;
 		direction = -1;
 		while (scan_strand_best_mip.find(preliminary_scan_position) == scan_strand_best_mip.end() && preliminary_scan_position >= earliest_scan_position) preliminary_scan_position--;
-    }
-    if (scan_strand_best_mip.find(preliminary_scan_position) == scan_strand_best_mip.end()) 
+	}
+	if (scan_strand_best_mip.find(preliminary_scan_position) == scan_strand_best_mip.end()) 
 	{
 		return null_pointer;
 	}
@@ -1886,7 +1886,7 @@ boost::shared_ptr<SVMipv4> translocate_down_region (Featurev5 * feature, set<int
 	boost::shared_ptr<SVMipv4> next_mip;
 	int previous_scan_extent = latest_scan_position + 1; // merely for overriding max_mip_overlap when a gap will result
 	for (int chosen_scan_position = preliminary_scan_position; (next_mip == 0 && previous_scan_extent > latest_scan_position && chosen_scan_position < feature->stop_position_flanked && chosen_scan_position > feature->start_position_flanked - min_capture_size) || (next_mip != 0 && ((next_mip->score < upper_score_limit || next_mip->snp_count > 0) && chosen_scan_position >= earliest_scan_position && chosen_scan_position <= latest_scan_position && (direction == -1 || chosen_scan_position + next_mip->scan_size > *positions_to_scan.rbegin()))); chosen_scan_position += direction)
-    {
+	{
 		int strand_index; 
 		int strand_iterations;
 		if(strand_to_use != -1) 
@@ -1900,20 +1900,20 @@ boost::shared_ptr<SVMipv4> translocate_down_region (Featurev5 * feature, set<int
 			strand_iterations = 2;
 		}
 		for (int i = 0; i < strand_iterations; i++)
-        {
+		{
 			strand_index = 1 - strand_index;
 			if (scan_strand_best_mip[chosen_scan_position].find(strands[strand_index]) == scan_strand_best_mip[chosen_scan_position].end()) continue; // it is possible that condensing eliminated one of the strands
 			bool skip_ahead = false;
 			string current_strand = strands[strand_index];
-            boost::shared_ptr<SVMipv4> test_mip = scan_strand_best_mip[chosen_scan_position][current_strand];
-            if(args["-score_method"] == "mixed")
+			boost::shared_ptr<SVMipv4> test_mip = scan_strand_best_mip[chosen_scan_position][current_strand];
+			if(args["-score_method"] == "mixed")
 			{
 				test_mip->get_parameters(scoring_parameters, feature->long_range_content);
 				test_mip->score = predict_value(scoring_parameters, model);
 			}
 			previous_scan_extent = test_mip->scan_stop_position;
-            if (next_mip == 0 || test_mip->score > next_mip->score || test_mip->snp_count < next_mip->snp_count)
-            {
+			if (next_mip == 0 || test_mip->score > next_mip->score || test_mip->snp_count < next_mip->snp_count)
+			{
 				int test_copy_count = test_mip->ext_probe_copy > test_mip->lig_probe_copy ? test_mip->ext_probe_copy : test_mip->lig_probe_copy;
 				double test_masked_proportion = test_mip->arm_fraction_masked;
 				if (test_copy_count > target_arm_copy && next_mip != 0)
@@ -1926,19 +1926,19 @@ boost::shared_ptr<SVMipv4> translocate_down_region (Featurev5 * feature, set<int
 					double next_masked_proportion = next_mip->arm_fraction_masked;
 					if (test_masked_proportion > next_masked_proportion) continue;
 				}
-                for (int position_to_occupy = test_mip->ext_probe_start; position_to_occupy <= test_mip->ext_probe_stop; position_to_occupy++)
+				for (int position_to_occupy = test_mip->ext_probe_start; position_to_occupy <= test_mip->ext_probe_stop; position_to_occupy++)
 				{
 					if (chr_strand_pos_used_arm_bases.find(feature->chr) != chr_strand_pos_used_arm_bases.end() && chr_strand_pos_used_arm_bases[feature->chr].find(current_strand) != chr_strand_pos_used_arm_bases[feature->chr].end() && chr_strand_pos_used_arm_bases[feature->chr][current_strand].count(position_to_occupy) == 1) skip_ahead = true;
 				}
 				if (skip_ahead) continue;
 				for (int position_to_occupy = test_mip->lig_probe_start; position_to_occupy <= test_mip->lig_probe_stop; position_to_occupy++)
 				{
-                    if (chr_strand_pos_used_arm_bases.find(feature->chr) != chr_strand_pos_used_arm_bases.end() && chr_strand_pos_used_arm_bases[feature->chr].find(current_strand) != chr_strand_pos_used_arm_bases[feature->chr].end() && chr_strand_pos_used_arm_bases[feature->chr][current_strand].count(position_to_occupy) == 1) skip_ahead = true;
-                }
-                if (!(skip_ahead)) next_mip = test_mip;
-            }
-        }
-    }
+					if (chr_strand_pos_used_arm_bases.find(feature->chr) != chr_strand_pos_used_arm_bases.end() && chr_strand_pos_used_arm_bases[feature->chr].find(current_strand) != chr_strand_pos_used_arm_bases[feature->chr].end() && chr_strand_pos_used_arm_bases[feature->chr][current_strand].count(position_to_occupy) == 1) skip_ahead = true;
+				}
+			if (!(skip_ahead)) next_mip = test_mip;
+			}
+		}
+	}
 	if(next_mip == 0) return null_pointer;
 	else return next_mip;
 }
@@ -1946,39 +1946,40 @@ boost::shared_ptr<SVMipv4> translocate_down_region (Featurev5 * feature, set<int
 void manage_picked_mip (Featurev5 * feature, boost::shared_ptr<SVMipv4> picked_mip, set<int> & positions_to_scan)
 {
 	picked_mip_counter++;
-    PICKEDMIPS << print_details(feature, picked_mip, picked_mip_counter, false);
-    if (picked_mip->snp_count == 1 && picked_mip->snp_failed == '0')
-    {
-    	picked_mip->ext_probe_sequence = picked_mip->snp_ext_sequence;
+	PICKEDMIPS << print_details(feature, picked_mip, picked_mip_counter, false);
+	if (picked_mip->snp_count == 1 && picked_mip->snp_failed == '0')
+	{
+		picked_mip->ext_probe_sequence = picked_mip->snp_ext_sequence;
 		picked_mip->lig_probe_sequence = picked_mip->snp_lig_sequence;
 		picked_mip->mip_seq = picked_mip->snp_mip_sequence;
 		SNPMIPS << print_details(feature, picked_mip, picked_mip_counter, true);
-    }
-    else if(picked_mip->snp_failed == '1')
-    {
-    	SNPMIPS << ">Alternate MIP(s) could not be generated for SNP in arms of MIP #" << picked_mip_counter << endl;
-    }
+	}
+	else if(picked_mip->snp_failed == '1')
+	{
+		SNPMIPS << ">Alternate MIP(s) could not be generated for SNP in arms of MIP #" << picked_mip_counter << endl;
+	}
 	string other_strand = picked_mip->strand == "+" ? "-" : "+";
-    if(args["-seal_both_strands"] == "on")
-    {
-    	for (int occupied_position = picked_mip->ext_probe_start; occupied_position <= picked_mip->ext_probe_stop; occupied_position++)	chr_strand_pos_used_arm_bases[feature->chr][other_strand].insert(occupied_position);
+	if(args["-seal_both_strands"] == "on")
+	{
+		for (int occupied_position = picked_mip->ext_probe_start; occupied_position <= picked_mip->ext_probe_stop; occupied_position++)	chr_strand_pos_used_arm_bases[feature->chr][other_strand].insert(occupied_position);
 		for (int occupied_position = picked_mip->lig_probe_start; occupied_position <= picked_mip->lig_probe_stop; occupied_position++) chr_strand_pos_used_arm_bases[feature->chr][other_strand].insert(occupied_position);
-    }
+	}
 	else if(args["-half_seal_both_strands"] == "on")
 	{
 		int occupied_position = (picked_mip->ext_probe_stop + picked_mip->ext_probe_start) / 2; chr_strand_pos_used_arm_bases[feature->chr][other_strand].insert(occupied_position);
 		occupied_position = (picked_mip->lig_probe_start + picked_mip->lig_probe_stop) / 2; chr_strand_pos_used_arm_bases[feature->chr][other_strand].insert(occupied_position);
 	}
-    for (int occupied_position = picked_mip->ext_probe_start; occupied_position <= picked_mip->ext_probe_stop; occupied_position++)	chr_strand_pos_used_arm_bases[feature->chr][picked_mip->strand].insert(occupied_position);
+	for (int occupied_position = picked_mip->ext_probe_start; occupied_position <= picked_mip->ext_probe_stop; occupied_position++)	chr_strand_pos_used_arm_bases[feature->chr][picked_mip->strand].insert(occupied_position);
 	for (int occupied_position = picked_mip->lig_probe_start; occupied_position <= picked_mip->lig_probe_stop; occupied_position++) chr_strand_pos_used_arm_bases[feature->chr][picked_mip->strand].insert(occupied_position);
-    for (int position_scanned = picked_mip->scan_start_position; position_scanned <= picked_mip->scan_stop_position; position_scanned++) positions_to_scan.erase(position_scanned);
+	for (int position_scanned = picked_mip->scan_start_position; position_scanned <= picked_mip->scan_stop_position; position_scanned++) positions_to_scan.erase(position_scanned);
 }
 
 void exit_input_error(int line_num)
 {
-        fprintf(stderr,"Wrong input format at line %d\n", line_num);
-        exit(1);
+	fprintf(stderr,"Wrong input format at line %d\n", line_num);
+	exit(1);
 }
+//LIBSVMi method
 double predict_value(vector<double> & parameters, svm_model * model)
 {	
 //	cout << "predicting" << endl;

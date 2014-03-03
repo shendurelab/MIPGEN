@@ -38,23 +38,23 @@ double SVMipv4::count_ext_mer(string sub)
 	return count;
 }
 double SVMipv4::count_lig_mer(string sub)
+{
+	double count = 0;
+	for (size_t offset = this->lig_probe_sequence.find(sub); offset != string::npos; offset = this->lig_probe_sequence.find(sub, offset + 1))
 	{
-			double count = 0;
-			for (size_t offset = this->lig_probe_sequence.find(sub); offset != string::npos; offset = this->lig_probe_sequence.find(sub, offset + 1))
-			{
-					count++;
-			}
-			return count;
+		count++;
 	}
+	return count;
+}
 double SVMipv4::count_insert_mer(string sub)
+{
+	double count = 0;
+	for (size_t offset = this->scan_target_sequence.find(sub); offset != string::npos; offset = this->scan_target_sequence.find(sub, offset + 1))
 	{
-			double count = 0;
-			for (size_t offset = this->scan_target_sequence.find(sub); offset != string::npos; offset = this->scan_target_sequence.find(sub, offset + 1))
-			{
-					count++;
-			}
-			return count;
+		count++;
 	}
+	return count;
+}
 
 
 void SVMipv4::get_parameters(vector<double> & parameters, double long_range_content[]) 
@@ -119,39 +119,38 @@ double SVMipv4::get_score ()
 	double run_count = 0;
    	for (int i = 1; i< this->scan_size; i++)
 	{
-                	string current_base = this->scan_target_sequence.substr(i, 1);
-	
-                	if (current_base == "G" || current_base == "C")
-                	{	
-                        	if (last_base == "G" || last_base == "C") {}
-                        	else
-                        	{
-                                	run_count++;
-                                	last_base = current_base;
-                        	}
-                	}
-                	else
-                	{
-                       		if ("A" == last_base || "T" == last_base) {}
-                       		else {
-                                	run_count++;
-                                	last_base = current_base;
-                        	}
-                	}
+		string current_base = this->scan_target_sequence.substr(i, 1);
+		if (current_base == "G" || current_base == "C")
+		{	
+			if (last_base == "G" || last_base == "C") {}
+			else
+			{
+				run_count++;
+				last_base = current_base;
+			}
+		}
+		else
+		{
+	       		if ("A" == last_base || "T" == last_base) {}
+	       		else {
+				run_count++;
+				last_base = current_base;
+			}
+		}
 	}
-        	run_count++;
-        double bases_per_switch = this->scan_size / run_count;
+	run_count++;
+	double bases_per_switch = this->scan_size / run_count;
 	double ext_g_count = (double) count(this->ext_probe_sequence.begin(), this->ext_probe_sequence.end(), 'G');
 	double lig_g_count = (double) count(this->lig_probe_sequence.begin(), this->lig_probe_sequence.end(), 'G');
 	double target_g_count = (double) count(this->scan_target_sequence.begin(), this->scan_target_sequence.end(), 'G');
 
 	double ext_gc_count = (double) count(this->ext_probe_sequence.begin(), this->ext_probe_sequence.end(), 'C') + ext_g_count;
-        	double lig_gc_count = (double) count(this->lig_probe_sequence.begin(), this->lig_probe_sequence.end(), 'C') + lig_g_count;
-        double target_gc_count = (double) count(this->scan_target_sequence.begin(), this->scan_target_sequence.end(), 'C') + target_g_count;
+	double lig_gc_count = (double) count(this->lig_probe_sequence.begin(), this->lig_probe_sequence.end(), 'C') + lig_g_count;
+	double target_gc_count = (double) count(this->scan_target_sequence.begin(), this->scan_target_sequence.end(), 'C') + target_g_count;
 
 	double ext_a_count = (double) count(this->ext_probe_sequence.begin(), this->ext_probe_sequence.end(), 'A');
-        double lig_a_count = (double) count(this->lig_probe_sequence.begin(), this->lig_probe_sequence.end(), 'A');
-        	double target_a_count = (double) count(this->scan_target_sequence.begin(), this->scan_target_sequence.end(), 'A');
+	double lig_a_count = (double) count(this->lig_probe_sequence.begin(), this->lig_probe_sequence.end(), 'A');
+	double target_a_count = (double) count(this->scan_target_sequence.begin(), this->scan_target_sequence.end(), 'A');
 
 	double ext_length = this->extension_arm_length;
 	double lig_length = this->ligation_arm_length;
@@ -249,20 +248,20 @@ double SVMipv4::get_score ()
 };
 void SVMipv4::set_junction_scores()
 {
-                SVMipv4::junction_scores["AA"] = 0.0;
+		SVMipv4::junction_scores["AA"] = 0.0;
 		SVMipv4::junction_scores["AC"] = 0.35;
-                SVMipv4::junction_scores["AG"] = 0.046;
-                SVMipv4::junction_scores["AT"] = 0.079;
-                SVMipv4::junction_scores["CA"] = 0.34;
-                SVMipv4::junction_scores["CC"] = 0.22;
-                SVMipv4::junction_scores["CG"] = 0.55;
-                SVMipv4::junction_scores["CT"] = -0.071;
-                SVMipv4::junction_scores["GA"] = 0.35;
-                SVMipv4::junction_scores["GC"] = 0.92;
-                SVMipv4::junction_scores["GG"] = 0.24;
-                SVMipv4::junction_scores["GT"] = 0.48;
-                SVMipv4::junction_scores["TA"] = -0.46;
-                SVMipv4::junction_scores["TC"] = -0.35;
-                SVMipv4::junction_scores["TG"] = -0.25;
-                SVMipv4::junction_scores["TT"] = -0.98;
+		SVMipv4::junction_scores["AG"] = 0.046;
+		SVMipv4::junction_scores["AT"] = 0.079;
+		SVMipv4::junction_scores["CA"] = 0.34;
+		SVMipv4::junction_scores["CC"] = 0.22;
+		SVMipv4::junction_scores["CG"] = 0.55;
+		SVMipv4::junction_scores["CT"] = -0.071;
+		SVMipv4::junction_scores["GA"] = 0.35;
+		SVMipv4::junction_scores["GC"] = 0.92;
+		SVMipv4::junction_scores["GG"] = 0.24;
+		SVMipv4::junction_scores["GT"] = 0.48;
+		SVMipv4::junction_scores["TA"] = -0.46;
+		SVMipv4::junction_scores["TC"] = -0.35;
+		SVMipv4::junction_scores["TG"] = -0.25;
+		SVMipv4::junction_scores["TT"] = -0.98;
 }
