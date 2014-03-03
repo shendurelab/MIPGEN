@@ -284,7 +284,7 @@ void print_header() {
 		cerr << "progress file could not be opened" << endl;
 		throw 5;
 	}
-	PROGRESS << __FILE__ << endl << "last numbered version: 0.9.5" << endl;
+	PROGRESS << __FILE__ << endl << "last numbered version: 0.9.6" << endl;
 	PROGRESS << "contact: Evan Boyle\nemail: boylee@uw.edu\n";
 	for (map<string,string>::iterator it = args.begin(); it!= args.end(); it++) 
 	{
