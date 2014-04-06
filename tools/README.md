@@ -41,7 +41,7 @@ finish preprocessing reads with mipgen_fq_cutter
 -optionally trim reads
 
 step 4:
-map with bwa (mem) to human reference: Shendure's at /net/shendure/vol10/nobackup/shared/alignments/bwa-0.6.1/human_g1k_hs37d5/hs37d5.fa
+map with bwa (mem) to human reference
 
 -ensure version of bwa is above 0.6.1
 

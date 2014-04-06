@@ -67,6 +67,7 @@ with open(outfq, 'w') as out:
     block.append(line)
   except StopIteration:
    break
+  block[0] = re.sub("/\d$","",block[0])
   barcode_in_header = re.search("#([ATGCN]+)(-[ATGCN]+)?$", block[0])
   if options.index_file != None:
    for i in range(4):

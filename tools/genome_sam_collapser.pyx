@@ -719,7 +719,7 @@ def initialize_and_iterate(options):
       continue
     if options.mip_reference:
       current_read.mip_key = current_read.chromosome
-    if "g" in current_read.mip_key and options.mip_file != None:
+    if current_read.mip_key[-2:] == "/g" and options.mip_file != None:
       file_handles["off_target_output"].write(sam_line)
       off_target_reads += 1
       continue
