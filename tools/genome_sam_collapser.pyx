@@ -169,16 +169,16 @@ cdef class sam_read:
     if self.mip_key not in observed_sites.keys():
       observed_sites[self.mip_key] = {}
       consensus_details[self.mip_key] = {}
-    if(self.barcode not in observed_sites[self.mip_key].keys()):
+    if self.barcode not in observed_sites[self.mip_key].keys():
       observed_sites[self.mip_key][self.barcode] = {}
       consensus_details[self.mip_key][self.barcode] = {}
-    if(self.mtag not in observed_sites[self.mip_key][self.barcode].keys()):
+    if self.mtag not in observed_sites[self.mip_key][self.barcode].keys():
       observed_sites[self.mip_key][self.barcode][self.mtag] = [{}, {}]
       #print observed_sites[self.mip_key][self.barcode].keys()
       consensus_details[self.mip_key][self.barcode][self.mtag] = [None, None]
-    if(consensus_details[self.mip_key][self.barcode][self.mtag][self.read_number] == None):
+    if consensus_details[self.mip_key][self.barcode][self.mtag][self.read_number] == None:
       consensus_details[self.mip_key][self.barcode][self.mtag][self.read_number] = self
-    if(start_and_cigar not in observed_sites[self.mip_key][self.barcode][self.mtag][self.read_number].keys()):
+    if start_and_cigar not in observed_sites[self.mip_key][self.barcode][self.mtag][self.read_number].keys():
       observed_sites[self.mip_key][self.barcode][self.mtag][self.read_number][start_and_cigar] = [[self.cluster, self.seq, self.qual]]
     else:
       observed_sites[self.mip_key][self.barcode][self.mtag][self.read_number][start_and_cigar].append([self.cluster, self.seq, self.qual])
@@ -643,15 +643,19 @@ def initialize_and_iterate(options):
   file_handles["improper_pairs"] = open(sys.argv[2] + ".improper_pairs.sam", 'w')
   file_handles["strange_alignments"] = open(sys.argv[2] + ".strange_alignments.sam", 'w')
   file_handles["off_target_output"] = open(sys.argv[2] + ".off_target_reads.sam", 'w')
-  if options.collapse_free:
-    file_handles["collapse_free"] = open(sys.argv[2] + ".on_target_uncollapsed_reads.sam", 'w')
   if options.filter_softclips:
     file_handles["softclipped_output"] = open(sys.argv[2] + ".softclipped.sam", 'w')
   if(options.barcode_file == None or options.merge_samples):
-    file_handles["merged_output"] =  open(sys.argv[2] + ".all_reads.unique.sam", 'w')
+    if options.collapse_free:
+      file_handles["merged_output"] =  open(sys.argv[2] + ".all_reads.uncollapsed.sam", 'w')
+    else:
+      file_handles["merged_output"] =  open(sys.argv[2] + ".all_reads.unique.sam", 'w')
   else:
     for barcode,label in barcode_labels.iteritems():
-      file_handles[barcode] = open(sys.argv[2] + "." + label + ".unique.sam", 'w')
+      if options.collapse_free:
+        file_handles[barcode] = open(sys.argv[2] + "." + label + ".uncollapsed.sam",'w')
+      else:
+        file_handles[barcode] = open(sys.argv[2] + "." + label + ".unique.sam", 'w')
   if options.exact_arms:
     file_handles["imperfect_arms"] = open(sys.argv[2] + ".imperfect_arms.sam", 'w')
   file_handles["complexity_summary"] = open(sys.argv[2] + ".complexity.txt", 'w')
@@ -741,7 +745,14 @@ def initialize_and_iterate(options):
         file_handles["imperfect_arms"].write(sam_line)
         continue
     if options.collapse_free:
-      file_handles["collapse_free"].write(current_read.text() + "\n")
+      if options.barcode_file == None or options.merge_samples:
+        file_handles["merged_output"].write(current_read.text() + "\n")
+      else:
+        file_handles[current_read.barcode].write(current_read.text() + "\n")
+      if options.barcode_file != None:
+        complexity_by_sample[current_read.barcode][0] += 1
+      if options.mip_file != None and current_read.mip_key in uniformity_keys:
+        complexity_by_position[current_read.mip_key][0] += 1
       continue
     if current_read.mip_key not in observed_sites.keys():
       manage_sites(observed_sites, consensus_details, current_read.mip_key, uniformity_keys, barcode_labels, complexity_by_position, complexity_by_sample, mtag_population, probability_list, & all_total_reads, & all_unique_reads, file_handles, options) # try dumping data
@@ -749,10 +760,11 @@ def initialize_and_iterate(options):
     current_read.enter_read(consensus_details, observed_sites)
   if not options.collapse_free:
     manage_sites(observed_sites, consensus_details, "done:0-0/0,0/0", uniformity_keys, barcode_labels, complexity_by_position, complexity_by_sample, mtag_population, probability_list, & all_total_reads, & all_unique_reads, file_handles, options)
-    if(options.mip_file != None):
-      output_mip_complexity(complexity_by_position, file_handles["mipwise_summary"])
-    if(options.barcode_file != None):
-      output_sample_complexity(complexity_by_sample, barcode_labels, file_handles["samplewise_summary"])
+  if(options.mip_file != None):
+    output_mip_complexity(complexity_by_position, file_handles["mipwise_summary"])
+  if(options.barcode_file != None):
+    output_sample_complexity(complexity_by_sample, barcode_labels, file_handles["samplewise_summary"])
+  if not options.collapse_free:
     output_overall_complexity(& all_unique_reads, & all_total_reads, file_handles["samplewise_summary"])
   file_handles["notes"].write("%i reads skipped due to barcode or tag filters\n" % reads_skipped)
   file_handles["notes"].write("%i reads with softclipping\n" % softclippings)

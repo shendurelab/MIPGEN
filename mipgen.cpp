@@ -184,8 +184,9 @@ void set_default_args() {
 	args["-download_tabix_index"] = "off";
 	args["-lig_min_length"] = "18";
 	args["-ext_min_length"] = "16";
-	args["-max_arm_copy_product"] = "100";
+	args["-max_arm_copy_product"] = "75";
 	args["-target_arm_copy"] = "20";
+    args["-bwa_threads"] = "1";
 }
 // turns parameters into their proper types for easy access by field
 void parse_arg_values() {
@@ -284,7 +285,7 @@ void print_header() {
 		cerr << "progress file could not be opened" << endl;
 		throw 5;
 	}
-	PROGRESS << __FILE__ << endl << "last numbered version: 0.9.6" << endl;
+	PROGRESS << __FILE__ << endl << "last numbered version: 0.9.8" << endl;
 	PROGRESS << "contact: Evan Boyle\nemail: boylee@uw.edu\n";
 	for (map<string,string>::iterator it = args.begin(); it!= args.end(); it++) 
 	{
@@ -331,11 +332,10 @@ void query_sequences(){
 	cerr << "[mipgen] regions ready; accessing snp file\n";
 
 	map<string, map<int, string> > chr_snp_positions;
-	if(common_snps != "off")
-	{
-		load_chr_snps(); // loads snp positions and alleles into memory from NCBI using tabix
-	}
-	load_given_snps();
+
+    if(!(args["-common_snps"] == "off" && args["-snp_file"] == "<none>"))
+        load_snps(); // loads snp positions and alleles into memory using tabix
+
 	if(common_snps == "on" && snp_load_count == 0)
 	{
 		PROGRESS << "no snp data found; turn off common snps option and load vcf file directly" << endl;
@@ -382,10 +382,10 @@ void query_sequences(){
 		throw 13;
 	}
 	COLLAPSEDMIPS << ">mip_key\t";
-	if(args["-score_method"] == "logistic")
-		COLLAPSEDMIPS << "logistic";
-	else
+	if(args["-score_method"] == "svr")
 		COLLAPSEDMIPS << "svr";
+	else
+		COLLAPSEDMIPS << "logistic";
 	COLLAPSEDMIPS << "_score\tchr\text_probe_start\text_probe_stop\text_probe_copy\text_probe_sequence\tlig_probe_start\tlig_probe_stop\tlig_probe_copy\tlig_probe_sequence\tmip_scan_start_position\tmip_scan_stop_position\tscan_target_sequence\tmip_sequence\tfeature_start_position\tfeature_stop_position\tprobe_strand\tfailure_flags\tmip_name\n";
 	PROGRESS << "file of collapsed mips ready for write: " << project_name << ".collapsed_mips.txt\n";
 
@@ -561,7 +561,7 @@ void tile_regions()
 // uses BWA to find probe and target copy numbers
 void find_copy ()
 {
-	system((args["-bwa"] + " aln " + bwa_genome_index + " " + project_name + ".oligo_copy_count.fq > " + project_name + ".oligo_copy_count.sai").c_str());
+	system((args["-bwa"] + " aln -t " + args["-bwa_threads"] + " " + bwa_genome_index + " " + project_name + ".oligo_copy_count.fq > " + project_name + ".oligo_copy_count.sai").c_str());
 	system((args["-bwa"] + " samse " + bwa_genome_index + " " + project_name + ".oligo_copy_count.sai " + project_name + ".oligo_copy_count.fq > " + project_name + ".oligo_copy_count.sam").c_str());
 	ifstream OLIGOSAM ((project_name + ".oligo_copy_count.sam").c_str());
 	if (OLIGOSAM.is_open()) cerr << "[mipgen] checking oligo copy" << endl;
@@ -838,7 +838,7 @@ string check_copy_numbers()
 	}
 	BWAFQ.close();
 	ARMSFQ.close();
-	system((args["-bwa"] + " aln " + bwa_genome_index + " " + project_name + ".all_sequences.fq > " + project_name + ".all_sequences.sai").c_str());
+	system((args["-bwa"] + " aln -t " + args["-bwa_threads"] + " " + bwa_genome_index + " " + project_name + ".all_sequences.fq > " + project_name + ".all_sequences.sai").c_str());
 	system((args["-bwa"] + " samse " + bwa_genome_index + " " + project_name + ".all_sequences.sai " + project_name +".all_sequences.fq > " + project_name + ".all_sequences.sam").c_str());
 
 	int bad_site_counter = 0;
@@ -872,9 +872,8 @@ string check_copy_numbers()
 	return (i.str() + " ambiguously mapping start positions must be avoided\n");
 }
 // acquires, prints and load snp data into memory
-void load_chr_snps()
+void load_snps()
 {
-	
 	string query = "";
 	int first_position = features_to_scan.front().start_position_flanked - 500;
 	int last_position = features_to_scan.front().stop_position_flanked + 500;
@@ -927,97 +926,65 @@ void load_chr_snps()
 		cerr << "[mipgen] tabix not loaded" << endl;
 		throw 16;
 	}
-	system((args["-tabix"] + " ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/common_all.vcf.gz " + query + " > " + project_name + ".snp_data.vcf").c_str()) ;	
-	ifstream COMMONSNPS ((project_name + ".snp_data.vcf").c_str());
-	string line;
-	if (COMMONSNPS.is_open())
+    if(args["-common_snps"] != "off")
 	{
-		cerr << "[mipgen] SNP file opened" << endl;
-		while (COMMONSNPS.good())
-		{
-			getline(COMMONSNPS,line);
-			if (line.length() < 2) continue;	
-			int start_position = 0;
-			int stop_position = line.find_first_of(" \t", 0);
-			string chr = line.substr(start_position, stop_position);
-			start_position = stop_position + 1;
-			stop_position = line.find_first_of(" \t", start_position);
-			int position = boost::lexical_cast<int>(line.substr(start_position, stop_position - start_position));
-			start_position = stop_position + 1;
-			stop_position = line.find_first_of(" \t", start_position);
-			start_position = stop_position + 1;
-			stop_position = line.find_first_of(" \t", start_position);
-			string ref_allele = line.substr(start_position, stop_position - start_position);
-			start_position = stop_position + 1;
-			stop_position = line.find_first_of(" \t", start_position);
-			string alt_allele = line.substr(start_position, stop_position - start_position);
-			string alleles_content = ref_allele + alt_allele;
-			if (ref_allele.length() > 1) // indel
-			{
-				for (unsigned int i = 1; i < ref_allele.length(); i++)
-				{ 
-					chr_snp_positions[chr][position + i] = alleles_content;
-				}
-			}
-			else
-			{
-				chr_snp_positions[chr][position] = alleles_content;
-			}
-			snp_load_count++;
-			//cout << "snp # " << snp_load_count << endl;
-		}
-		COMMONSNPS.close();
-	}
-	else
-	{
-		cerr << "[mipgen] SNP file could not be opened" << endl;
-	}
+        system((args["-tabix"] + " ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/common_all.vcf.gz " + query + " > " + project_name + ".downloaded_snp_data.vcf").c_str()) ;
+        parse_vcf(project_name + ".downloaded_snp_data.vcf");
+    }
+    if(args["-snp_file"] != "<none>")
+    {
+        system((args["-tabix"] + " " + args["-snp_file"] + " " + query + " > " + project_name + ".local_snp_data.vcf").c_str()) ;
+        parse_vcf(project_name + ".local_snp_data.vcf");
+    }
 }
-
+    
 // reads a VCF and stores SNP positions in memory for evasion purposes
-void load_given_snps()
+void parse_vcf(string vcf_file)
 {
-	string line;
-	if(args["-snp_file"] != "<none>")
-	{
-		ifstream GIVENSNPS (args["-snp_file"].c_str());
-		while (GIVENSNPS.good())
-		{
-			getline(GIVENSNPS, line);
-			if(line.length() < 2 or line[0] == '#') continue;
-			int start_position = 0;
-			int stop_position = line.find_first_of(" \t", 0);
-			string chr = line.substr(start_position, stop_position);
-			start_position = stop_position + 1;
-			stop_position = line.find_first_of(" \t", start_position);
-			//cout << line.substr(start_position, stop_position - start_position) << endl;
-			int position = boost::lexical_cast<int>(line.substr(start_position, stop_position - start_position));
-			start_position = stop_position + 1;
-			stop_position = line.find_first_of(" \t", start_position);
-			start_position = stop_position + 1;
-			stop_position = line.find_first_of(" \t", start_position);
-			string ref_allele = line.substr(start_position, stop_position - start_position);
-			start_position = stop_position + 1;
-			stop_position = line.find_first_of(" \t", start_position);
-			string alt_allele = line.substr(start_position, stop_position - start_position);
-			string alleles_content = ref_allele + alt_allele;
-			if (ref_allele.length() > 1) // indel
-			{
-				for (unsigned int i = 1; i < ref_allele.length(); i++)
-				{
-					chr_snp_positions[chr][position + i] = alleles_content;
-				}
-			}
-			else
-			{
-		 		chr_snp_positions[chr][position] = alleles_content;
-			}
-			snp_load_count++;
-		}
-		GIVENSNPS.close();
-	}
+    string line;
+    ifstream SNPS (vcf_file.c_str());
+    if(SNPS.is_open())
+    {
+        while (SNPS.good())
+        {
+            getline(SNPS, line);
+            if(line.length() < 2 or line[0] == '#') continue;
+            int start_position = 0;
+            int stop_position = line.find_first_of(" \t", 0);
+            string chr = line.substr(start_position, stop_position);
+            start_position = stop_position + 1;
+            stop_position = line.find_first_of(" \t", start_position);
+            //cout << line.substr(start_position, stop_position - start_position) << endl;
+            int position = boost::lexical_cast<int>(line.substr(start_position, stop_position - start_position));
+            start_position = stop_position + 1;
+            stop_position = line.find_first_of(" \t", start_position);
+            start_position = stop_position + 1;
+            stop_position = line.find_first_of(" \t", start_position);
+            string ref_allele = line.substr(start_position, stop_position - start_position);
+            start_position = stop_position + 1;
+            stop_position = line.find_first_of(" \t", start_position);
+            string alt_allele = line.substr(start_position, stop_position - start_position);
+            string alleles_content = ref_allele + alt_allele;
+            if (ref_allele.length() > 1) // indel
+            {
+                for (unsigned int i = 1; i < ref_allele.length(); i++)
+                {
+                    chr_snp_positions[chr][position + i] = alleles_content;
+                }
+            }
+            else
+            {
+                chr_snp_positions[chr][position] = alleles_content;
+            }
+            snp_load_count++;
+        }
+        SNPS.close();
+    }
+    else
+    {
+        cerr << "[mipgen] VCF file could not be opened" << endl;
+    }
 }
-
 
 // loads feature details into memory
 string get_features_to_scan()
@@ -1258,7 +1225,7 @@ string parse_command_line(int argc, char * argv[])
 	string all_options = "-regions_to_scan -feature_flank -feature_flank -genome_dir -project_name -bwa -bwa_genome_index \
 		-trf -tabix -check_copy_number -common_snps -arm_lengths -arm_length_sums -min_capture_size -download_tabix_index \
 		-max_capture_size -capture_increment -max_mip_overlap -starting_mip_overlap -stop_optimizing_scores_above -silent_mode \
-		-masked_arm_threshold -seal_both_strands -half_seal_both_strands -tag_sizes -ext_min_length -lig_min_length \
+		-masked_arm_threshold -seal_both_strands -half_seal_both_strands -tag_sizes -ext_min_length -lig_min_length -bwa_threads \
 		-snp_file -double_tile_strand_unaware -double_tile_strands_separately -score_method -logistic_heuristic -file_of_parameters \
 		-logistic_priority_score -svr_priority_score -logistic_optimal_score -svr_optimal_score -max_arm_copy_product -target_arm_copy";
 	vector<string> option_vector;
@@ -1316,7 +1283,7 @@ Oligo control:\n\
 -target_arm_copy                threshold over which minimizing copy number to the reference takes priority\n\
                                 default is 20\n\
 -max_arm_copy_product           maximum permissible product of targeting arm copy number to the reference\n\
-                                default is 100\n\
+                                default is 75\n\
 Tool dependencies:\n\
 \n\
 -tabix                          tabix build\n\
@@ -1378,7 +1345,9 @@ Miscellaneous:\n\
 \n\
 -silent_mode                    providing \"on\" will reduce volume of text output\n\
 -download_tabix_index           providing \"on\" will force redownload of common snp tbi file\n\
-                                (may be necessary after annual update)\n";
+                                (may be necessary after annual update)\n\
+-bwa_threads                    make use of BWA's multithreading option (-t _)'\n\
+                                default is 1\n";
 
 	if(argc == 1) return splash;
 	else if(string(argv[1])=="-doc") return doc;
@@ -1974,12 +1943,13 @@ void manage_picked_mip (Featurev5 * feature, boost::shared_ptr<SVMipv4> picked_m
 	for (int position_scanned = picked_mip->scan_start_position; position_scanned <= picked_mip->scan_stop_position; position_scanned++) positions_to_scan.erase(position_scanned);
 }
 
+//LIBSVM method
 void exit_input_error(int line_num)
 {
 	fprintf(stderr,"Wrong input format at line %d\n", line_num);
 	exit(1);
 }
-//LIBSVMi method
+//LIBSVM method
 double predict_value(vector<double> & parameters, svm_model * model)
 {	
 //	cout << "predicting" << endl;
