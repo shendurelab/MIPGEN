@@ -5,6 +5,8 @@ One stop MIP design and analysis
 
 Use MIPgen to design custom mip panels for target enrichment of moderate to high complexity DNA targets ranging from 120 to 250bp in size
 
+To compile MIPgen, you will need a C++ compiler, such as GCC (http://gcc.gnu.org/). That's it! For running design and analysis, see below for dependencies
+
 -----
 BUILD MIPGEN
 -----
