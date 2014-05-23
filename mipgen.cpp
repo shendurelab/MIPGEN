@@ -1,6 +1,7 @@
 /*
-Written by Evan Boyle 
-boylee@u.washington.edu
+Written by Evan Boyle, Universitu of Washington
+boylee [at] u.washington.edu
+Copyright 2014, all rights reserved
 */
 #include <map>
 #include <string>
@@ -1288,18 +1289,16 @@ Tool dependencies:\n\
 \n\
 -tabix                          tabix build\n\
                                 default is \"tabix\"\n\
--common_snps                    providing \"off\" will disable loading of common SNPs to avoid from NCBI using Tabix\n\
 -bwa                            bwa build\n\
                                 default is \"bwa\"\n\
--feature_flank                  integer value for extending BED coordinates\n\
-                                default is 0\n\
 -trf                            tandem repeats finder executable\n\
                                 default is \"off\"\n\
                                 providing a TRF executable enables filtering of simple repeats in probe arms\n\
 Input options:\n\
 -genome_dir                     genome reference directory helpful for large jobs\n\
                                 ex: /my/genome/split/by/chromosomes/\n\
--snp_file                       vcf filepath of snps to avoid during design\n\
+-snp_file                       path to vcf file of snps to avoid during design\n\
+-common_snps                    providing \"off\" will disable loading of common SNPs to avoid from NCBI using Tabix\n\
 -file_of_parameters             file containing any of the above parameters in the following format:\n\
                                         -first_parameter_name first_parameter_value\n\
                                         -second_parameter_name second_parameter_value\n\
@@ -1307,6 +1306,8 @@ Input options:\n\
                                         lines that do not start with '-' are ignored\n\
 Tiling control:\n\
 \n\
+-feature_flank                  integer value for extending BED coordinates\n\
+                                default is 0\n\
 -capture_increment              integer step size for examining capture sizes\n\
                                 default is 5\n\
                                 starts at maximum and descends until minimum is reached or\n\
@@ -1346,7 +1347,7 @@ Miscellaneous:\n\
 -silent_mode                    providing \"on\" will reduce volume of text output\n\
 -download_tabix_index           providing \"on\" will force redownload of common snp tbi file\n\
                                 (may be necessary after annual update)\n\
--bwa_threads                    make use of BWA's multithreading option (-t _)'\n\
+-bwa_threads                    make use of BWA's multithreading option (-t _)\n\
                                 default is 1\n";
 
 	if(argc == 1) return splash;

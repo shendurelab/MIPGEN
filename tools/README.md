@@ -50,3 +50,40 @@ collapse smmip TDRGs with mipgen_smmip_collapser
 
 -specify output directory and prefix and tag length
 
+-disable collapsing (and partition reads) with -w option
+
+step 6:
+review output files:
+
+on target, deduped/smc-reads
+-all_reads.unique.sam
+-[sample].unique.sam
+
+reads with softclipped MIP arms
+-softclipped.sam
+
+paired end reads mapping kilobases/chromosomes apart
+-discordant_arms.sam
+
+paired end reads missing their pairs
+-unpaired_reads.sam
+
+valid reads capturing unintended genomic loci
+-off_target_reads.sam
+
+reads flagged as improper alignments by BWA
+-improper_pairs.sam
+
+reads with unexpected/incorrectly formatted SAM fields
+-strange_alignments.sam
+
+reads with targeting arm sequencing not matching synthesized oligos
+-imperfect_arms.sam
+
+MIP summary information
+-smMIPS_noPEAR.indexed.sort.collapse.complexity.txt
+-smMIPS_noPEAR.indexed.sort.collapse.mipwise_summary.txt
+-smMIPS_noPEAR.indexed.sort.collapse.samplewise_summary.txt
+-smMIPS_noPEAR.indexed.sort.collapse.notes.txt
+
+MIPgen is copyrighted by Evan Boyle, University of Washington, 2014

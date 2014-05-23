@@ -1,3 +1,6 @@
+# Written by Evan Boyle
+# boylee [at] uw.edu
+
 import sys
 import re
 import gzip

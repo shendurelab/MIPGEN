@@ -13,7 +13,8 @@
 <project_name>.oligo_copy_count.sam
 <project_name>.picked_mips.txt #final set of designed mips
 <project_name>.progress.txt #log
-<project_name>.snp_data.vcf #snps downloaded via tabix
+<project_name>.downloaded_snp_data.vcf #snps downloaded from NCBI via tabix
+<project_name>.local_snp_data.vcf #snps retrieved from a provided vcf file via tabix
 <project_name>.snp_mips.txt #mips designed to snp loci with alternate allele
 
 #POSSIBLE OUTPUT

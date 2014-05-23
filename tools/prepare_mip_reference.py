@@ -1,3 +1,6 @@
+# Written by Evan Boyle
+# boylee [at] uw.edu
+
 import sys
 from string import maketrans
 complement = maketrans("GCATgcat", "CGTAcgta")

@@ -1,3 +1,5 @@
+# Written by Evan Boyle
+# boylee [at] uw.edu
 import sys
 import re
 import numpy as np
@@ -24,7 +26,7 @@ if __name__ == "__main__":
   parser.add_option("-s", "--single_end", action="store_true", default=False, help="single end run")
   parser.add_option("-S", "--no_softclip_filtering", action="store_false", dest="filter_softclips", default=True, help="retains reads with softclipping at the beginning of the read")
   parser.add_option("-w", "--collapse_free", action="store_true", default=False, help="do not run collapsing -- only trim and partition reads")
-  parser.add_option("-x", "--exact_arms", action="store_true", default=False, help="only accept MIP reads with exact arm matches, default accepts any read at correct position [EXPERIMENTAL]")
+  parser.add_option("-x", "--exact_arms", action="store_true", default=False, help="only accept MIP reads with exact arm matches, default accepts any read at correct position")
 
   options, args = parser.parse_args()
  
