@@ -86,4 +86,4 @@ MIP summary information
 -smMIPS_noPEAR.indexed.sort.collapse.samplewise_summary.txt
 -smMIPS_noPEAR.indexed.sort.collapse.notes.txt
 
-MIPgen is copyrighted by Evan Boyle, University of Washington, 2014
+© University of Washington 2014

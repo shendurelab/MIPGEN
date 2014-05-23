@@ -54,3 +54,5 @@ OTHER NOTES
 -summary information is also printed as part of the collapsing process and requires NumPy and SciPy
 
 -if there is at least 10bp of overlap between forward and reverse reads, it is recommended to merge read pairs into fr-reads using PEAR ( http://bioinformatics.oxfordjournals.org/content/early/2013/11/10/bioinformatics.btt593.long ) prior to processing and to utilize single end options
+
+© University of Washington 2014
