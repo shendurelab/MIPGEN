@@ -12,9 +12,15 @@ other tools can be used to:
 - assess basewise coverage from mip analysis output (complexity_to_basewise.sh)
 - print a fasta of mip targets for specialized alignment purposes (prepare_mip_reference.py)
 
+it is first necessary to compile the Cython module genome_sam_collapser.pyx into a .so file
+
+```
+python setup.py build_ext --inplace
+```
+
 the steps of analysis are generally as follows:
 
-step 0:
+step 0 (starting from qseq format ensures fastq headers are properly formatted):
 convert qseq format to (gzipped) fastq format with mipgen_qseq_to_fastq
 
 step 1:
