@@ -6,7 +6,7 @@ python mipgen_pipeline_builder.py
 
 Edit the pipeline builder to change your desired default behavior
 
-Alternatively, edit the output of the sh file to customize analysis
+Alternatively, edit the output of the sh file to customize analysis. Analysis shell scripts link together the other scripts in the tools directory along with alignment with BWA to lead to a SAM file ready for variant calling. Memory text files record your answers to the builder script to clarify how the analysis script was composed. Feeding memory files into the builder script (with or without modification) enables fast rebuilding of the analysis script.
 
 See the options for each of the mipgen scripts by providing the -h flag
 
