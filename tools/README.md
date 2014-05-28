@@ -1,7 +1,9 @@
 Use the mipgen pipeline builder to analyze a set or to form a template for multiple analyses
 
 Edit the pipeline builder to change your desired default behavior
+
 Alternatively, edit the output of the sh file to customize analysis
+
 See the options for each of the mipgen scripts by providing the -h flag
 
 mipgen_smmip_collapser outputs the performance of each sample, each mip across all samples, and each mip for each sample
