@@ -1,5 +1,9 @@
 Use the mipgen pipeline builder to analyze a set or to form a template for multiple analyses
 
+```
+python mipgen_pipeline_builder.py
+```
+
 Edit the pipeline builder to change your desired default behavior
 
 Alternatively, edit the output of the sh file to customize analysis
