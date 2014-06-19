@@ -60,7 +60,11 @@ GETTING STARTED
 -----
 
 Below is an example for getting MIPgen up and running and designing probes to EGFR, TERT and BRAF. 
-The output generated from these commands is included in the repository (mipgen_example.tgz)
+The output generated from these commands is included in the repository (mipgen_example.tgz). 
+The file used in the example to pull out gene exons for the hg19 human reference (refGene.txt) can be downloaded here: 
+
+http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/
+
 
 First extract the tar file to make a MIPgen directory
 
