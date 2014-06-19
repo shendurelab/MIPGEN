@@ -59,8 +59,9 @@ OTHER NOTES
 GETTING STARTED
 -----
 
-Below is an example for getting MIPgen up and running and designing probes to EGFR, TERT and BRAF
+Below is an example for getting MIPgen up and running and designing probes to EGFR, TERT and BRAF. 
 The output generated from these commands is included in the repository (mipgen_example.tgz)
+
 First extract the tar file to make a MIPgen directory
 
     tar -xf mipgen.tgz
