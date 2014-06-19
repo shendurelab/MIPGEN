@@ -55,4 +55,50 @@ OTHER NOTES
 
 -if there is at least 10bp of overlap between forward and reverse reads, it is recommended to merge read pairs into fr-reads using PEAR ( http://bioinformatics.oxfordjournals.org/content/early/2013/11/10/bioinformatics.btt593.long ) prior to processing and to utilize single end options
 
+-----
+GETTING STARTED
+-----
+
+Below is an example for getting MIPgen up and running and designing probes to EGFR, TERT and BRAF
+
+first extract the tar file to make a MIPgen directory
+	tar -xf mipgen.tgz
+enter the directory to compile the source code
+	cd MIPGEN/
+use make to compile -- make sure you have a C++ compiler
+	make
+make a directory for practicing designs
+	mkdir ../mipgen_practice
+	cd ../mipgen_practice
+create a new file and type a list of gene symbols you would like to tile
+with MIPs
+	vim practice_genes.txt
+you can use one of the scripts in the tools subdirectory and a refGene text
+file listing gene exons to pull out the genomic coordinates of your genes of
+interest
+	sh ../MIPGEN/tools/extract_coding_gene_exons.sh practice_genes.txt ../refGene.txt > practice_genes.bed
+check to make sure the coordinates are what you expect and that no errors
+occurred
+	less practice_genes.bed
+now you can perform designs with MIPgen
+here are some very basic options
+make sure you have the dependencies installed or accessible through a given
+path (BWA, tabix, samtools)
+	../MIPGEN/mipgen -regions_to_scan practice_genes.bed -project_name practice_design -min_capture_size 162 -max_capture_size 162 -bwa_genome_index $hg19ref
+the final selection of MIPs is located in the picked MIPs file
+review the scores to make sure the MIPs stand a good chance of success
+(logistic scores below 0.6 are unlikely to provide usable data)
+	less practice_design.picked_mips.txt
+by default all tested MIPs are output; this is a lot of output! (Turn it off with the silent_mode option)
+	rm practice_design.all_mips.txt
+sai, fq (and sam) files are not deleted automatically and can also take up
+space
+	rm -f *.sai *.fq
+generate a UCSC track with another tools script to visualize online
+	python ../MIPGEN/tools/generate_ucsc_track.py practice_design.picked_mips.txt practice_ucsc_track
+look at the other files in this directory to see designs for TERT, BRAF and
+EGFR (we have not tested these designs experimentally so we cannot precisely
+assess predicted performance
+
+
 © University of Washington 2014
