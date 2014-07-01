@@ -53,10 +53,10 @@ if(options.output_prefix != None):
 else:
  outfq = sys.argv[1] + ".indexed.fq"
 if options.index_file != None:
- if options.gzip_input :
+ if options.gzip_input or re.search(".gz$", options.index_file):
   i_in = gzip.open(options.index_file, 'rb')
  else:
-  i_in = open(options.index_file, 'rb')
+  i_in = open(options.index_file, 'r')
 else:
   i_in = None
 with open(outfq, 'w') as out:
