@@ -286,7 +286,7 @@ void print_header() {
 		cerr << "progress file could not be opened" << endl;
 		throw 5;
 	}
-	PROGRESS << __FILE__ << endl << "last numbered version: 0.9.8" << endl;
+	PROGRESS << __FILE__ << endl << "last numbered version: 1.0" << endl;
 	PROGRESS << "contact: Evan Boyle\nemail: boylee@uw.edu\n";
 	for (map<string,string>::iterator it = args.begin(); it!= args.end(); it++) 
 	{
@@ -1239,7 +1239,7 @@ Required parameters:\n\
 \n\
 -project_name                   prefix for output\n\
                                 ex: /my/output/directory/batch_1\n\
--bwa_genome_index               samtools- and bwa-indexed genome reference file location\n\
+-bwa_genome_index               samtools- and bwa-indexed genome reference file path\n\
 -regions_to_scan                BED file of positions GUARANTEED to be captured\n\
                                 regions will be merged as needed\n\
 -min_capture_size               integer value for length of targeting arms plus insert region to be captured\n\
@@ -1253,7 +1253,7 @@ Required parameters:\n\
 \n\
 -project_name                   prefix for output\n\
                                 ex: /my/output/directory/batch_1\n\
--bwa_genome_index               samtools- and bwa-indexed genome reference file location\n\
+-bwa_genome_index               samtools- and bwa-indexed genome reference file path\n\
 -regions_to_scan                BED file of positions GUARANTEED to be captured\n\
                                 regions will be merged as needed\n\
 -min_capture_size               integer value for length of targeting arms plus insert region to be captured\n\
