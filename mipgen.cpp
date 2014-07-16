@@ -998,6 +998,7 @@ string get_features_to_scan()
 	while(FH.good())
 	{
 		getline(FH,details);
+		boost::trim(details);
 	//	cout << details << endl;
 		if (details.length() > 1 && details[0] != '#')
 		{
@@ -1016,7 +1017,6 @@ string get_features_to_scan()
 	{
 		string line (*it);
 		string label;
-		boost::trim(line);	
 		if (line[0] == '>' || line[0] == '#' || line.find_first_not_of(" \t\n") > line.length()) // header
 			continue;
 		else
@@ -1101,11 +1101,19 @@ bool get_chr_fasta_sequence_using_samtools ()
 	Featurev5 * feature;
 	system(("rm -f " + project_name + ".feature_sequences.fa").c_str());
 	system(("rm -f " + project_name + ".flanking_sequences.fa").c_str());
-	ifstream GENOMEREF (bwa_genome_index.c_str());
 	string header;
-	getline(GENOMEREF, header);
-	GENOMEREF.close();
-	string prefix (header.substr(1,3) == "chr" ? "chr" : ""); // adds "chr" to samtools queries if present in reference being used
+	string prefix;
+	try{
+		ifstream GENOMEREF (bwa_genome_index.c_str());
+		getline(GENOMEREF, header);
+		GENOMEREF.close();
+		prefix = header.substr(1,3) == "chr" ? "chr" : ""; //adds "chr" to samtools queries if present in reference being used
+		cerr << "[mipgen] first line of reference fasta reads: " << header << endl;
+	}
+	catch (...) {
+		cerr << "genome fasta could not be opened; check file path and permissions?" << endl;
+                return false;
+	}
 	for (list<Featurev5>::iterator it = features_to_scan.begin(); it != features_to_scan.end(); it++)
 	{
 		feature = &*it;
