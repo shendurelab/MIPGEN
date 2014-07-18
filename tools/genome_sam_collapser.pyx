@@ -559,7 +559,7 @@ cdef int trim_and_edit(current_read, arm_sequences={}):
 def find_saturation(size_of_mip_pool, mips_sampled, unique_mips_observed):
   return size_of_mip_pool * (1. - pow(1 - 1. / size_of_mip_pool, float(mips_sampled))) - float(unique_mips_observed)
 
-cdef int output_mip_complexity(complexity_by_position, fh):
+cpdef int output_mip_complexity(complexity_by_position, fh):
   for mip_key in complexity_by_position:
     position_total_reads = complexity_by_position[mip_key][0]
     position_unique_reads = complexity_by_position[mip_key][1]
@@ -577,7 +577,7 @@ cdef int output_mip_complexity(complexity_by_position, fh):
     fh.write('ALL_SAMPLES\t' + mip_key + '\t' + str(complexity_by_position[mip_key][0]) + '\t' + str(complexity_by_position[mip_key][1]) + '\t' + position_saturation + '\n')
   return 0
 
-cdef int output_sample_complexity(complexity_by_sample, barcode_labels, fh):
+cpdef int output_sample_complexity(complexity_by_sample, barcode_labels, fh):
   for barcode in complexity_by_sample:
     sample_total_reads = complexity_by_sample[barcode][0]
     sample_unique_reads = complexity_by_sample[barcode][1]
