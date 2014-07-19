@@ -859,7 +859,7 @@ string check_copy_numbers()
 		{
 			string size_chr_and_pos = line.substr(0, line.find("\t"));
 			size_t sep1 = size_chr_and_pos.find("_", 0);
-			size_t sep2 = size_chr_and_pos.find("_", sep1 + 1);
+			size_t sep2 = size_chr_and_pos.rfind("_");
 			int size = boost::lexical_cast<int>(size_chr_and_pos.substr(0, sep1));
 			string chr = size_chr_and_pos.substr(sep1 + 1, sep2 - sep1 - 1);
 			int pos = boost::lexical_cast<int>(size_chr_and_pos.substr(sep2 + 1));
