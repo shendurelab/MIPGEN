@@ -104,7 +104,7 @@ Here is a design with very basic options
 Make sure you have the dependencies installed or accessible through a given
 path (BWA, tabix, samtools)!
 
-    ../MIPGEN/mipgen -regions_to_scan practice_genes.bed -project_name practice_design -min_capture_size 162 -max_capture_size 162 -bwa_genome_index $hg19ref
+    ../MIPGEN/mipgen -regions_to_scan practice_genes.bed -project_name practice_design -min_capture_size 162 -max_capture_size 162 -bwa_genome_index ${hg19_fasta}
 
 The final selection of MIPs is located in the picked MIPs file
 review the scores to make sure the MIPs stand a good chance of success
