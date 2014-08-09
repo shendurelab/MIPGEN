@@ -119,7 +119,6 @@ string bwa_genome_index;
 int max_mip_overlap;
 int starting_mip_overlap;
 int max_capture_size;
-string common_snps;
 int min_capture_size;
 int capture_increment;
 
@@ -176,13 +175,11 @@ void set_default_args() {
 	args["-seal_both_strands"] = "off";
 	args["-half_seal_both_strands"] = "off";
 	args["-masked_arm_threshold"] = "0.5";
-	args["-common_snps"] = "on";
 	args["-snp_file"] = "<none>";
 	args["-capture_increment"] = "5";
 	args["-max_mip_overlap"] = "30";
 	args["-max_mip_overlap"] = "30";
 	args["-score_method"] = "logistic";
-	args["-download_tabix_index"] = "off";
 	args["-lig_min_length"] = "18";
 	args["-ext_min_length"] = "16";
 	args["-max_arm_copy_product"] = "75";
@@ -272,7 +269,6 @@ void parse_arg_values() {
 	max_mip_overlap = boost::lexical_cast<int>(args["-max_mip_overlap"]);
 	starting_mip_overlap = boost::lexical_cast<int>(args["-starting_mip_overlap"]);
 	max_capture_size = boost::lexical_cast<int>(args["-max_capture_size"]);
-	common_snps = args["-common_snps"];
 	min_capture_size = boost::lexical_cast<int>(args["-min_capture_size"]);
 	capture_increment = boost::lexical_cast<int>(args["-capture_increment"]);
 	if (capture_increment == 0) capture_increment = 1; // Prevent any strange behavior associated with 0 value
@@ -286,7 +282,7 @@ void print_header() {
 		cerr << "progress file could not be opened" << endl;
 		throw 5;
 	}
-	PROGRESS << __FILE__ << endl << "last numbered version: 1.0" << endl;
+	PROGRESS << __FILE__ << endl << "last numbered version: 1.1" << endl;
 	PROGRESS << "contact: Evan Boyle\nemail: boylee@uw.edu\n";
 	for (map<string,string>::iterator it = args.begin(); it!= args.end(); it++) 
 	{
@@ -334,16 +330,9 @@ void query_sequences(){
 
 	map<string, map<int, string> > chr_snp_positions;
 
-    if(!(args["-common_snps"] == "off" && args["-snp_file"] == "<none>"))
+    if(!(args["-snp_file"] == "<none>"))
         load_snps(); // loads snp positions and alleles into memory using tabix
 
-	if(common_snps == "on" && snp_load_count == 0)
-	{
-		PROGRESS << "no snp data found; turn off common snps option and load vcf file directly" << endl;
-		PROGRESS << "note that there may be no common snps in your targets if few bases are targeted" << endl;
-		cerr << "tabix error; see progress file" << endl;
-		throw 10;
-	}
 	PROGRESS << "all " << snp_load_count << " snps loaded; generating files for bwa\n";
 	cerr << "[mipgen] all " << snp_load_count << " snps loaded; generating files for bwa\n";
 
@@ -917,21 +906,12 @@ void load_snps()
 	stop_str = stop_ss.str();
 	query.append( current_chr + ":" + start_str + "-" + stop_str + " ");
 	//PROGRESS << "tabix query: " << endl << query << endl;
-	if(args["-download_tabix_index"] == "on")
-	{
-		system(("curl ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/common_all.vcf.gz.tbi > $(pwd)/common_all.vcf.gz.tbi"));
-	}
 	int tabix_test = system(args["-tabix"].c_str());
 	if(tabix_test != 256)
 	{
 		cerr << "[mipgen] tabix not loaded" << endl;
 		throw 16;
 	}
-    if(args["-common_snps"] != "off")
-	{
-        system((args["-tabix"] + " ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/common_all.vcf.gz " + query + " > " + project_name + ".downloaded_snp_data.vcf").c_str()) ;
-        parse_vcf(project_name + ".downloaded_snp_data.vcf");
-    }
     if(args["-snp_file"] != "<none>")
     {
         system((args["-tabix"] + " " + args["-snp_file"] + " " + query + " > " + project_name + ".local_snp_data.vcf").c_str()) ;
@@ -1107,7 +1087,14 @@ bool get_chr_fasta_sequence_using_samtools ()
 		ifstream GENOMEREF (bwa_genome_index.c_str());
 		getline(GENOMEREF, header);
 		GENOMEREF.close();
-		prefix = header.substr(1,3) == "chr" ? "chr" : ""; //adds "chr" to samtools queries if present in reference being used
+		if(header.length() <= 3)
+		{
+			prefix = "";
+		}
+		else
+		{
+			prefix = header.substr(1,3) == "chr" ? "chr" : ""; //adds "chr" to samtools queries if present in reference being used
+		}
 		cerr << "[mipgen] first line of reference fasta reads: " << header << endl;
 	}
 	catch (...) {
@@ -1253,7 +1240,13 @@ Required parameters:\n\
 -min_capture_size               integer value for length of targeting arms plus insert region to be captured\n\
                                 tested down to 120\n\
 -max_capture_size               integer value for length of targeting arms plus insert region to be captured\n\
-                                tested up to 250\n";
+                                tested up to 250\n\
+Highly recommended parameter:\n\
+\n\
+-snp_file			VCF file, either for the whole genome or just select regions\n\
+				You must index with tabix in advance so that relevant sequences can be retrieved\n\
+				NCBI (at time of writing) has a file of common SNPs for human here:\n\
+				ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b141_GRCh37p13/VCF/common_all.vcf.gz\n";
 	string doc = "\n\
 usage: mipgen (<-parameter_name> <parameter_value>)*\n\
 Created by Evan Boyle (boylee@uw.edu)\n\
@@ -1307,6 +1300,7 @@ Input options:\n\
                                 ex: /my/genome/split/by/chromosomes/\n\
 -snp_file                       path to vcf file of snps to avoid during design\n\
 -common_snps                    providing \"off\" will disable loading of common SNPs to avoid from NCBI using Tabix\n\
+				DEPRECATED:ONLY SNP FILE OPTION NOW SUPPORTED\n\
 -file_of_parameters             file containing any of the above parameters in the following format:\n\
                                         -first_parameter_name first_parameter_value\n\
                                         -second_parameter_name second_parameter_value\n\
@@ -1354,7 +1348,7 @@ Miscellaneous:\n\
 \n\
 -silent_mode                    providing \"on\" will reduce volume of text output\n\
 -download_tabix_index           providing \"on\" will force redownload of common snp tbi file\n\
-                                (may be necessary after annual update)\n\
+                                DEPRECATED\n\
 -bwa_threads                    make use of BWA's multithreading option (-t _)\n\
                                 default is 1\n";
 
