@@ -212,7 +212,7 @@ void parse_arg_values() {
 		args["-svr_priority_score"] = "1.5";
 	if(args.find("-logistic_optimal_score") == args.end())
 		args["-logistic_optimal_score"] = "0.98";
-	if(args.find("-logistic_priotity_score") == args.end())
+	if(args.find("-logistic_priority_score") == args.end())
 		args["-logistic_priority_score"] = "0.9";
 	if(args["-score_method"] != "logistic" && args["-score_method"] != "svr" && args["-score_method"] != "mixed")
 	{
