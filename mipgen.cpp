@@ -1,5 +1,5 @@
 /*
-Written by Evan Boyle, Universitu of Washington
+Written by Evan Boyle, University of Washington
 boylee [at] u.washington.edu
 Copyright 2014, all rights reserved
 */
@@ -1215,6 +1215,53 @@ bool get_chr_fasta_sequence_from_genome_dir (string genome_dir)
 	FEATURESEQS.close();
 	return true;
 }
+// prints out regions that have not been tiled in BED format
+void print_gaps (ofstream & gap_bed, string file_ext, string progress_note, Featurev5 * feature, set<int> & positions)
+{
+	if (!(positions.empty()))
+	{
+		if(!(gap_bed.is_open()))
+		{	
+			gap_bed.open((args["-project_name"] + file_ext).c_str());
+		}
+		PROGRESS << progress_note << feature->chr << ":\n";
+		int start = *positions.begin();
+		int stop = start - 1;
+		for (set<int>::iterator it = positions.begin(); it != positions.end(); it++)
+		{
+			if (*it == stop + 1)
+			{
+				stop++;
+			}
+			else
+			{
+				gap_bed << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
+				start = *it;
+				stop = *it;
+			}
+		}
+		gap_bed << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
+	}
+}
+// prints out regions that have not been tiled in BED format
+void create_gap (ofstream & gap_bed, string file_ext, string progress_note, Featurev5 * feature, set<int> & positions)
+{
+	if(!(gap_bed.is_open()))
+	{	
+		gap_bed.open((args["-project_name"] + file_ext).c_str());
+	}
+	PROGRESS << progress_note << feature->chr << ":\n";
+	int start = *positions.begin();
+	int stop = start + max_capture_size / 2;
+	set<int>::iterator it = positions.begin();
+	for(int i = 0; i < max_capture_size / 2; i++)
+	{
+		positions.erase(it);
+		it++;
+	}
+	gap_bed << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
+
+}
 // intializes all the relevant variables
 string parse_command_line(int argc, char * argv[]) 
 {
@@ -1449,6 +1496,7 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 	set<int> positions_to_scan_minus;
 	set<int> positions_to_scan_minus_again;
 	int strand_to_use = double_tile_strands_separately ? 0 : -1;
+	bool extended_region;
 
 	for(int position = feature->start_position_flanked; position <= feature->stop_position_flanked; position++)
 	{
@@ -1478,149 +1526,79 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 	{
 		picked_mip = optimize_worst_in_region(feature, positions_to_scan_minus, 1);
 		while (!(positions_to_scan_minus.empty()) && picked_mip != 0 && picked_mip->score < lower_score_limit)
-	{
-		manage_picked_mip(feature, picked_mip, positions_to_scan_minus);
-		picked_mip = optimize_worst_in_region(feature, positions_to_scan_minus, 1);
-		if(args["-score_method"] == "mixed" && picked_mip != 0)
+        {
+            manage_picked_mip(feature, picked_mip, positions_to_scan_minus);
+            picked_mip = optimize_worst_in_region(feature, positions_to_scan_minus, 1);
+            if(args["-score_method"] == "mixed" && picked_mip != 0)
 			{
 				picked_mip->get_parameters(scoring_parameters, feature->long_range_content);
 				picked_mip->score = predict_value(scoring_parameters, model);
 			}	
+        }
 	}
-	}
-	// cout << "optimizing done" << endl;
+	cout << "optimizing done" << endl;
 	if (!(positions_to_scan.empty()))
 	{
 		do 
 		{
+            // cout << "picking MIP at " << *positions_to_scan.begin() << " to " << *positions_to_scan.rbegin() << endl;
 			picked_mip = translocate_down_region(feature, positions_to_scan, scoring_parameters, model, strand_to_use);
+			extended_region = *positions_to_scan.rbegin() - *positions_to_scan.begin() > max_capture_size;
+            // cout << "extended region? " << extended_region << endl;
+			if(picked_mip == null_pointer && extended_region)
+			{
+				create_gap(GAPS, ".coverage_failed.bed", "GAP INTRODUCED ON CHROMOSOME ", feature, positions_to_scan);
+			}
 			if (picked_mip != 0) manage_picked_mip(feature, picked_mip, positions_to_scan);
-		} while (!(positions_to_scan.empty()) && picked_mip != 0);
-	}
+        } while (!(positions_to_scan.empty()) && (picked_mip != 0 || extended_region));
+    }
 	if (!(positions_to_scan_minus.empty()))
 	{
 		do
 		{
 			picked_mip = translocate_down_region(feature, positions_to_scan_minus, scoring_parameters, model, 1);
+			extended_region = *positions_to_scan_minus.rbegin() - *positions_to_scan_minus.begin() > max_capture_size;
+			if(picked_mip == 0 && extended_region)
+			{
+				create_gap(MINUSGAPS, ".minus_strand_failed.bed", "GAP INTRODUCED ON MINUS STRAND OF CHROMOSOME ", feature, positions_to_scan_minus);
+			}
 			if (picked_mip != 0) manage_picked_mip(feature, picked_mip, positions_to_scan_minus);
-		} while (!(positions_to_scan_minus.empty()) && picked_mip != 0);
+		} while (!(positions_to_scan_minus.empty()) && (picked_mip != 0 || extended_region));
 	}
 	if (double_tile)
 	{
 		do
 		{
 			picked_mip = translocate_down_region(feature,positions_to_scan_again, scoring_parameters, model, strand_to_use);
+			extended_region = *positions_to_scan_again.rbegin() - *positions_to_scan_again.begin() > max_capture_size;
+			if(picked_mip == 0 && extended_region)
+			{
+				create_gap(DOUBLEGAPS, ".double_tile_failed.bed", "GAP INTRODUCED ON DOUBLE TILING OF CHROMOSOME ", feature, positions_to_scan_again);
+			}
 			//cout << "iteration, picked mip = " << picked_mip << endl;
 			if (picked_mip != 0) manage_picked_mip(feature, picked_mip, positions_to_scan_again);
-		} while (!(positions_to_scan_again.empty()) && picked_mip != 0);
+		} while (!(positions_to_scan_again.empty()) && (picked_mip != 0 || extended_region));
 		if (double_tile_strands_separately)
 		{
 			do
 			{
 				picked_mip = translocate_down_region(feature,positions_to_scan_again, scoring_parameters, model, 1);
+				extended_region = *positions_to_scan_again.rbegin() - *positions_to_scan_again.begin() > max_capture_size;
+				if(picked_mip == 0 && extended_region)
+				{
+					create_gap(DOUBLEGAPS, ".minus_strand_double_tile_failed.bed", "GAP INTRODUCED ON MINUS STRAND OF DOUBLE TILING OF CHROMOSOME ", feature, positions_to_scan_minus_again);
+				}
 				//cout << "iteration, picked mip = " << picked_mip << endl;
 				if (picked_mip != 0) manage_picked_mip(feature, picked_mip, positions_to_scan_minus_again);
-			} while (!(positions_to_scan_minus_again.empty()) && picked_mip != 0);
+			} while (!(positions_to_scan_minus_again.empty()) && (picked_mip != 0 || extended_region));
 		}
 	}
-	if (!(positions_to_scan.empty()))
-	{
-		if (!(GAPS.is_open()))
-		{
-			GAPS.open((args["-project_name"] + ".coverage_failed.bed").c_str());
-		}
-		PROGRESS << "BASES NOT COVERED ON CHROMOSOME " << feature->chr << ":\n";
-		bad_design_count++;
-		int start = *positions_to_scan.begin();
-		int stop = start - 1;
-		for (set<int>::iterator it = positions_to_scan.begin(); it != positions_to_scan.end(); it++)
-		{
-			if (*it == stop + 1)
-			{
-				stop++;
-			}
-			else
-			{
-				GAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-				start = *it;
-				stop = *it;
-			}
-		}
-		GAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-	}
-	if (!(positions_to_scan_again.empty()))
-	{
-		if (!(DOUBLEGAPS.is_open()))
-		{
-			DOUBLEGAPS.open((args["-project_name"] + ".double_tile_failed.bed").c_str());
-		}
-		PROGRESS << "BASES NOT DOUBLE TILED ON CHROMOSOME " << feature->chr << ":\n";
-		int start = *positions_to_scan_again.begin();
-		int stop = start - 1;
-		for (set<int>::iterator it = positions_to_scan_again.begin(); it != positions_to_scan_again.end(); it++)
-		{
-			if (*it == stop + 1)
-			{
-				stop++;
-			}
-			else
-			{
-				DOUBLEGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-				start = *it;
-				stop = *it;
-			}
-		}
-		DOUBLEGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-	}	
-	if (!(positions_to_scan_minus.empty()))
-	{
-		if(!(MINUSGAPS.is_open()))
-		{
-			MINUSGAPS.open((args["-project_name"] + ".minus_strand_failed.bed").c_str());
-		}
-		PROGRESS << "BASES NOT COVERED ON MINUS STRAND OF CHROMOSOME " << feature->chr << ":\n";
-		int start = *positions_to_scan_minus.begin();
-		int stop = start - 1;
-		for (set<int>::iterator it = positions_to_scan_minus.begin(); it != positions_to_scan_minus.end(); it++)
-		{
-			if (*it == stop + 1)
-			{
-				stop++;
-			}
-			else
-			{
-				MINUSGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-				start = *it;
-				stop = *it;
-			}
-		}
-		MINUSGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-	}
-	if (!(positions_to_scan_minus_again.empty()))
-	{
-		if(!(DOUBLEMINUSGAPS.is_open()))
-		{	
-			DOUBLEMINUSGAPS.open((args["-project_name"] + ".minus_strand_double_tile_failed.bed").c_str());
-		}
-		PROGRESS << "BASES NOT DOUBLE TILED ON MINUS STRAND OF CHROMOSOME " << feature->chr << ":\n";
-		int start = *positions_to_scan_minus_again.begin();
-		int stop = start - 1;
-		for (set<int>::iterator it = positions_to_scan_minus_again.begin(); it != positions_to_scan_minus_again.end(); it++)
-		{
-			if (*it == stop + 1)
-			{
-				stop++;
-			}
-			else
-			{
-				DOUBLEMINUSGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-				start = *it;
-				stop = *it;
-			}
-		}
-		DOUBLEMINUSGAPS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
-	}
+	print_gaps(GAPS, ".coverage_failed.bed", "BASES NOT COVERED ON CHROMOSOME ", feature, positions_to_scan);
+	print_gaps(DOUBLEGAPS, ".double_tile_failed.bed", "BASES NOT DOUBLE TILED ON CHROMOSOME ", feature, positions_to_scan_again);
+	print_gaps(MINUSGAPS, ".minus_strand_failed.bed", "BASES NOT COVERED ON MINUS STRAND OF CHROMOSOME ", feature, positions_to_scan_minus);
+	print_gaps(DOUBLEMINUSGAPS, ".minus_strand_double_tile_failed.bed", "BASES NOT DOUBLE TILED ON MINUS STRAND OF CHROMOSOME ", feature, positions_to_scan_minus_again);
 }
+
 // records each position's highest scoring mip possible 
 void collapse_mips () // throws out all restriction and mapping failures. retains snp failures if there is no alternative 
 {
