@@ -1536,7 +1536,7 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 			}	
         }
 	}
-	cout << "optimizing done" << endl;
+	// cout << "optimizing done" << endl;
 	if (!(positions_to_scan.empty()))
 	{
 		do 
