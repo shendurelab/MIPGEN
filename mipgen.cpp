@@ -1235,17 +1235,20 @@ void print_gaps (ofstream & gap_bed, string file_ext, string progress_note, Feat
 			}
 			else
 			{
+                bad_design_count++;
 				gap_bed << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
 				start = *it;
 				stop = *it;
 			}
 		}
+        bad_design_count++;
 		gap_bed << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
 	}
 }
 // prints out regions that have not been tiled in BED format
 void create_gap (ofstream & gap_bed, string file_ext, string progress_note, Featurev5 * feature, set<int> & positions)
 {
+    bad_design_count++;
 	if(!(gap_bed.is_open()))
 	{	
 		gap_bed.open((args["-project_name"] + file_ext).c_str());
@@ -1253,11 +1256,10 @@ void create_gap (ofstream & gap_bed, string file_ext, string progress_note, Feat
 	PROGRESS << progress_note << feature->chr << ":\n";
 	int start = *positions.begin();
 	int stop = start + max_capture_size / 2;
-	set<int>::iterator it = positions.begin();
-	for(int i = 0; i < max_capture_size / 2; i++)
+    PROGRESS << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
+	for(int i = start; i <= stop; i++)
 	{
-		positions.erase(it);
-		it++;
+		positions.erase(i);
 	}
 	gap_bed << feature->chr << "\t" << start - 1 << "\t" << stop << endl;
 
@@ -1558,7 +1560,7 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 		{
 			picked_mip = translocate_down_region(feature, positions_to_scan_minus, scoring_parameters, model, 1);
 			extended_region = *positions_to_scan_minus.rbegin() - *positions_to_scan_minus.begin() > max_capture_size;
-			if(picked_mip == 0 && extended_region)
+			if(picked_mip == null_pointer && extended_region)
 			{
 				create_gap(MINUSGAPS, ".minus_strand_failed.bed", "GAP INTRODUCED ON MINUS STRAND OF CHROMOSOME ", feature, positions_to_scan_minus);
 			}
@@ -1571,7 +1573,7 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 		{
 			picked_mip = translocate_down_region(feature,positions_to_scan_again, scoring_parameters, model, strand_to_use);
 			extended_region = *positions_to_scan_again.rbegin() - *positions_to_scan_again.begin() > max_capture_size;
-			if(picked_mip == 0 && extended_region)
+			if(picked_mip == null_pointer && extended_region)
 			{
 				create_gap(DOUBLEGAPS, ".double_tile_failed.bed", "GAP INTRODUCED ON DOUBLE TILING OF CHROMOSOME ", feature, positions_to_scan_again);
 			}
@@ -1584,7 +1586,7 @@ void pick_mips (Featurev5 * feature, vector<double> & scoring_parameters, svm_mo
 			{
 				picked_mip = translocate_down_region(feature,positions_to_scan_again, scoring_parameters, model, 1);
 				extended_region = *positions_to_scan_again.rbegin() - *positions_to_scan_again.begin() > max_capture_size;
-				if(picked_mip == 0 && extended_region)
+				if(picked_mip == null_pointer && extended_region)
 				{
 					create_gap(DOUBLEGAPS, ".minus_strand_double_tile_failed.bed", "GAP INTRODUCED ON MINUS STRAND OF DOUBLE TILING OF CHROMOSOME ", feature, positions_to_scan_minus_again);
 				}
