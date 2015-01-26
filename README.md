@@ -41,6 +41,8 @@ MIPGEN PITFALLS
 
 -SVR scores below 1.4 and logistic scores below 0.7 rarely perform adequately. It is recommended to remove these probes from designed assays.
 
+-The failure flags in the design files are a series of three bits. They represent, in order, non-uniqueness of the MIP target with respect to the provided genome sequence, inability to design SNP MIPs to any/all of the variants provided in the SNP file, and tandem repeats being detected in the MIP arms using Tandem Repeats Finder. SNP failures will be included in final probe sets. The others will not, assuming non-uniqueness is selected and a TRF executable is provided
+
 -----
 OTHER NOTES
 -----
