@@ -416,9 +416,10 @@ void tile_regions()
 		PROGRESS << "designing all mips for feature #" << feature_counter << endl;
 		cerr << "[mipgen] feature #" << feature_counter << endl;
 		string chr = feature->chr;
-		//cout << feature->start_position_flanked << "\t" << feature->stop_position_flanked << endl;
+		//cout << feature->start_position_flanked << "\t" << feature->stop_position_flanked << endl; //comment
 			
 		feature->current_scan_start_position = feature->start_position_flanked - max_capture_size + *arm_length_sum_set.rbegin(); // build mips starting from when the start of the feature is as far as possible from the extension arm
+		if(feature->current_scan_start_position < 0) feature->current_scan_start_position = 0;
 		while (feature->current_scan_start_position < feature->stop_position_flanked) // continue until the feature stop position is the first base following the extension arm
 		{
 			feature->current_scan_start_position++;
@@ -439,7 +440,9 @@ void tile_regions()
 						if (skip_ahead) continue;
 						int extension_arm_length = *it2;
 						int ligation_arm_length = arm_length_sum - extension_arm_length;
-						//cout << extension_arm_length << ":" << capture_size << ":" << feature->current_scan_start_position << endl;
+						if(feature->current_scan_start_position - extension_arm_length <= 0 || feature->current_scan_start_position - ligation_arm_length <= 0) continue;
+						if(feature->current_scan_start_position + capture_size - extension_arm_length - 1 > feature->chromosomal_sequence_stop_position || feature->current_scan_start_position + capture_size - ligation_arm_length - 1 > feature->chromosomal_sequence_stop_position) continue;
+						//cout << extension_arm_length << ":" << capture_size << ":" << feature->current_scan_start_position << endl; // comment
 						boost::shared_ptr<PlusSVMipv4> current_plus_mip (new PlusSVMipv4 (
 							feature->chr,
 							feature->current_scan_start_position,
@@ -457,7 +460,8 @@ void tile_regions()
 	
 						current_plus_mip->set_scan_target_seq(feature->chromosomal_sequence.substr(current_plus_mip->scan_start_position - feature->chromosomal_sequence_start_position, current_plus_mip->scan_size));		
 						current_minus_mip->set_scan_target_seq(feature->chromosomal_sequence.substr(current_minus_mip->scan_start_position - feature->chromosomal_sequence_start_position,current_minus_mip->scan_size));
-						//cout << "ready to design\n";
+						// cout << "ready to design\n"; // comment						
+						
 						boost::shared_ptr<SVMipv4> designed_plus_mip; 
 						designed_plus_mip = design_mip(feature, current_plus_mip);
 						if(args["-score_method"] == "logistic" || args["-score_method"] == "mixed")
@@ -471,6 +475,7 @@ void tile_regions()
 						scan_strand_mip_list[designed_plus_mip->scan_start_position]["+"].push_front(designed_plus_mip); // hashes with keys derived from strand and scan start position and values being arrays of mips at that position
 						if(args["-silent_mode"] != "on")
 							ALLMIPS << print_details(feature, designed_plus_mip, all_mip_counter, false); 
+						
 						boost::shared_ptr<SVMipv4> designed_minus_mip;
 						designed_minus_mip = design_mip(feature, current_minus_mip);
 						if(args["-score_method"] == "logistic" || args["-score_method"] == "mixed")
@@ -484,6 +489,7 @@ void tile_regions()
 						scan_strand_mip_list[designed_minus_mip->scan_start_position]["-"].push_front(designed_minus_mip);
 						if(args["-silent_mode"] != "on")
 							ALLMIPS << print_details(feature, designed_minus_mip, all_mip_counter, false);
+						
 						//cout << "design done!\n";	
 						if (args["-score_method"] == "logistic" && args["-logistic_heuristic"] != "off" && designed_plus_mip->score < previous_plus_score && designed_minus_mip->score < previous_minus_score) skip_ahead = true;
 						previous_best_score = (designed_minus_mip->score > designed_plus_mip->score) ? designed_minus_mip->score : designed_plus_mip->score;
@@ -595,6 +601,7 @@ boost::shared_ptr<SVMipv4> design_mip (Featurev5 * current_feature, boost::share
 	string chr = current_feature->chr;
 	current_mip->set_ext_probe_seq(current_feature->chromosomal_sequence.substr(current_mip->ext_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->extension_arm_length));
 	current_mip->set_lig_probe_seq(current_feature->chromosomal_sequence.substr(current_mip->lig_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->ligation_arm_length));
+	
 	current_mip->mip_seq = current_mip->lig_probe_sequence + universal_middle_mip_seq + current_mip->ext_probe_sequence;
 	string masked_ext_seq = current_feature->masked_chromosomal_sequence.substr(current_mip->ext_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->extension_arm_length);
 	string masked_lig_seq = current_feature->masked_chromosomal_sequence.substr(current_mip->lig_probe_start - current_feature->chromosomal_sequence_start_position, current_mip->ligation_arm_length);
@@ -805,11 +812,14 @@ string check_copy_numbers()
 			int current_mip_start = feature->start_position_flanked - capture_size;
 			while (current_mip_start < feature->stop_position_flanked)
 			{
-				BWAFQ << "@" << capture_size << "_" << feature->chr << "_" << current_mip_start << endl;
-				BWAFQ << feature->chromosomal_sequence.substr(current_mip_start - feature->chromosomal_sequence_start_position, capture_size) << endl;
-				BWAFQ << "+\n";
-				for (int i = 0; i < capture_size; i++) BWAFQ << "#";
-				BWAFQ << endl;
+				if(current_mip_start > 0 && current_mip_start + capture_size - 1 <= feature->chromosomal_sequence_stop_position)
+				{
+					BWAFQ << "@" << capture_size << "_" << feature->chr << "_" << current_mip_start << endl;
+					BWAFQ << feature->chromosomal_sequence.substr(current_mip_start - feature->chromosomal_sequence_start_position, capture_size) << endl;
+					BWAFQ << "+\n";
+					for (int i = 0; i < capture_size; i++) BWAFQ << "#";
+					BWAFQ << endl;
+				}
 				current_mip_start++;
 			}
 		}
@@ -1201,11 +1211,13 @@ bool get_chr_fasta_sequence_from_genome_dir (string genome_dir)
 			}
 			FH.close();
 		}
-		int feature_length = feature->stop_position_flanked + max_capture_size - (feature->start_position_flanked - max_capture_size) + 15; // 15 is the maximum difference between arm lengths, which extends the bases needed slightly
+		int chr_start_coordinate = feature->start_position_flanked - max_capture_size < 1 ? 1 : feature->start_position_flanked - max_capture_size;
+		int chr_stop_coordinate = feature->stop_position_flanked + max_capture_size + 15 > (signed int) chr_sequence.length() ? chr_sequence.length() : feature->stop_position_flanked + max_capture_size + 15; // 15 is the maximum difference between arm lengths, which extends the bases needed slightly
+		int feature_length = chr_stop_coordinate - chr_start_coordinate + 1; 
 
-		feature->chromosomal_sequence = chr_sequence.substr(feature->start_position_flanked - max_capture_size - 1, feature_length); // subtract one to convert from chr position to string position
-		feature->chromosomal_sequence_start_position = feature->start_position_flanked - max_capture_size;
-		feature->chromosomal_sequence_stop_position = feature->chromosomal_sequence_start_position + feature_length - 1;
+		feature->chromosomal_sequence = chr_sequence.substr(chr_start_coordinate - 1, feature_length); // subtract one to convert from chr position to string position
+		feature->chromosomal_sequence_start_position = chr_start_coordinate;
+		feature->chromosomal_sequence_stop_position = chr_stop_coordinate;
 		
 		FEATURESEQS << ">" << feature->chr << ':' << feature->chromosomal_sequence_start_position << "-" << feature->chromosomal_sequence_stop_position << endl;
 		FEATURESEQS << feature->chromosomal_sequence << endl;
