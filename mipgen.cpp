@@ -1828,7 +1828,7 @@ boost::shared_ptr<SVMipv4> translocate_down_region (Featurev5 * feature, set<int
 	int earliest_scan_position;
 	int preliminary_scan_position;
 	int direction;
-	if (positions_to_end < min_scan_size - 8) // Questionable: how small does the window have to be to switch to this new behavior? Currently within 8 bp of fitting the whole region in one mip
+	if (positions_to_end < min_scan_size - 10 - starting_mip_overlap) // Questionable: how small does the window have to be to switch to this new behavior? Used to be within 8 bp of fitting the whole region in one mip. Now 10bp.
 	{
 		earliest_scan_position = feature->stop_position_flanked - min_scan_size + 1;
 		preliminary_scan_position = earliest_scan_position;
@@ -1849,7 +1849,7 @@ boost::shared_ptr<SVMipv4> translocate_down_region (Featurev5 * feature, set<int
 	string strands[] = {"+","-"};
 	boost::shared_ptr<SVMipv4> next_mip;
 	int previous_scan_extent = latest_scan_position + 1; // merely for overriding max_mip_overlap when a gap will result
-	for (int chosen_scan_position = preliminary_scan_position; (next_mip == 0 && previous_scan_extent > latest_scan_position && chosen_scan_position < feature->stop_position_flanked && chosen_scan_position > feature->start_position_flanked - min_capture_size) || (next_mip != 0 && ((next_mip->score < upper_score_limit || next_mip->snp_count > 0) && chosen_scan_position >= earliest_scan_position && chosen_scan_position <= latest_scan_position && (direction == -1 || chosen_scan_position + next_mip->scan_size > *positions_to_scan.rbegin()))); chosen_scan_position += direction)
+	for (int chosen_scan_position = preliminary_scan_position; (next_mip == 0 && previous_scan_extent > latest_scan_position && chosen_scan_position < feature->stop_position_flanked && chosen_scan_position > feature->start_position_flanked - min_capture_size) || (next_mip != 0 && ((next_mip->score < upper_score_limit || next_mip->snp_count > 0) && chosen_scan_position >= earliest_scan_position && chosen_scan_position <= latest_scan_position - starting_mip_overlap && (direction == -1 || chosen_scan_position + next_mip->scan_size > *positions_to_scan.rbegin()))); chosen_scan_position += direction)
 	{
 		int strand_index; 
 		int strand_iterations;
