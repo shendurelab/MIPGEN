@@ -63,6 +63,10 @@ GETTING STARTED
 
 Below is an example for getting MIPgen up and running and designing probes to EGFR, TERT and BRAF. 
 The output generated from these commands is included in the repository (mipgen_example.tgz). 
+A copy of the human reference genome (GRCh37, also known as hg19 in UCSC) is available at the 1000Genomes FTP site:
+
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/human_g1k_v37.fa.gz
+
 The file used in the example to pull out gene exons for the hg19 human reference (refGene.txt) can be downloaded here: 
 
 http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/
@@ -102,11 +106,12 @@ occurred
     less practice_genes.bed
 
 Now you can perform designs with MIPgen!
-Here is a design with very basic options
+Here is a design with very basic options.
+Set the path to the genome reference and change the name of the FASTA file if yours is different.
 Make sure you have the dependencies installed or accessible through a given
 path (BWA, tabix, samtools)!
 
-    ../MIPGEN/mipgen -regions_to_scan practice_genes.bed -project_name practice_design -min_capture_size 162 -max_capture_size 162 -bwa_genome_index ${hg19_fasta}
+    ../MIPGEN/mipgen -regions_to_scan practice_genes.bed -project_name practice_design -min_capture_size 162 -max_capture_size 162 -bwa_genome_index /<path to genome reference fasta file>/human_g1k_v37.fa
 
 The final selection of MIPs is located in the picked MIPs file
 review the scores to make sure the MIPs stand a good chance of success
