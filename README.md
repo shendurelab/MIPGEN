@@ -65,7 +65,7 @@ Below is an example for getting MIPgen up and running and designing probes to EG
 The output generated from these commands is included in the repository (mipgen_example.tgz). 
 A copy of the human reference genome (GRCh37, also known as hg19 in UCSC) is available at the 1000Genomes FTP site:
 
-ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/human_g1k_v37.fa.gz
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/human_g1k_v37.fasta.gz
 
 The file used in the example to pull out gene exons for the hg19 human reference (refGene.txt) can be downloaded here: 
 
