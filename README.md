@@ -27,7 +27,7 @@ Other options provide control over tiling, scoring and oligo design behavior
 
 MIPgen offers three scoring methods based on two methods of scoring: SVR and logistic regression. Both methods offer similar performance, with slight improvements seen with the SVR scoring. The 'mixed' scoring option will perform designs primarily with the faster logistic regression score and finish with the more accurate SVR scoring scheme.
 
-Run ./mipgen -doc to see the full documentation
+Run ./mipgen -doc to see the full documentation or read the text below
 
 -----
 MIPGEN PITFALLS
@@ -135,6 +135,113 @@ Generate a UCSC track with another tools script to visualize online
 Look at the other files in this directory to see designs for TERT, BRAF and
 EGFR (we have not tested these designs experimentally so we cannot precisely
 assess predicted performance for these probes)
+
+-----
+DESCRIPTION OF ALL OPTIONS
+-----
+    usage: mipgen (<-parameter_name> <parameter_value>)*
+    Created by Evan Boyle (boylee@uw.edu)
+    Required parameters:
+
+    -project_name                   prefix for output
+                                    ex: /my/output/directory/batch_1
+    -bwa_genome_index               samtools- and bwa-indexed genome reference file path
+    -regions_to_scan                BED file of positions GUARANTEED to be captured
+                                    regions will be merged as needed
+    -min_capture_size               integer value for length of targeting arms plus insert region to be captured
+                                    tested down to 120
+    -max_capture_size               integer value for length of targeting arms plus insert region to be captured
+                                    tested up to 250
+    Oligo control:
+
+    -arm_lengths                    manual setting of individual possible ligation and extension arm lengths
+                                    format: <extension arm length 1>:<ligation arm length 1>,<extension arm length 2>:<ligation arm length 2>,...
+                                    ex: 16:24,16:25,16:26
+    -arm_length_sums                setting of arm lengths to include all pairs of arm lengths adding to a certain length
+                                    default is 40,41,42,43,44,45
+                                    format: <sum of extension and ligation arm lengths 1>,<sum of extension and ligation arm lengths 2>,...
+                                    ex: 40,45
+    -ext_min_length                 minimum length of extension arm
+                                    default is 16
+    -lig_min_length                 minimum length of ligation arm
+                                    default is 18
+    -tag_sizes                      specifies degenerate tag (Ns) to place in extension arm and ligation arm
+                                    more than 8 bases severely reduces on-target rate of capture
+                                    default is 5,0
+                                    format: <extension arm tag size>,<ligation arm tag size>
+                                    ex: 4,4
+    -masked_arm_threshold           fraction of targeting arms having masked bases (floating point number from 0 to 1)
+                                    to tolerate before optimizing with respect to masking (requires TRF executable)
+                                    default is 0.5
+    -target_arm_copy                threshold over which minimizing copy number to the reference takes priority
+                                    default is 20
+    -max_arm_copy_product           maximum permissible product of targeting arm copy number to the reference
+                                    default is 75
+    Tool dependencies:
+
+    -tabix                          tabix build
+                                    default is "tabix"
+    -bwa                            bwa build
+                                    default is "bwa"
+    -trf                            tandem repeats finder executable
+                                    default is "off"
+                                    providing a TRF executable enables filtering of simple repeats in probe arms
+    Input options:
+    -genome_dir                     genome reference directory helpful for large jobs
+                                    ex: /my/genome/split/by/chromosomes/
+    -snp_file                       path to vcf file of snps to avoid during design
+    -common_snps                    providing "off" will disable loading of common SNPs to avoid from NCBI using Tabix
+                    DEPRECATED:ONLY SNP FILE OPTION NOW SUPPORTED
+    -file_of_parameters             file containing any of the above parameters in the following format:
+                                            -first_parameter_name first_parameter_value
+                                            -second_parameter_name second_parameter_value
+                                            <etc.>
+                                            lines that do not start with '-' are ignored
+    Tiling control:
+
+    -feature_flank                  integer value for extending BED coordinates
+                                    default is 0
+    -capture_increment              integer step size for examining capture sizes
+                                    default is 5
+                                    starts at maximum and descends until minimum is reached or
+                                    acceptable score found, whichever is first
+    -logistic_heuristic             providing "off" will remove assumptions to reduce search space
+    -max_mip_overlap                integer specifying the maximum number of nucleotides of overlap
+                                    to test before selecting a MIP
+                                    default is 30
+    -starting_mip_overlap           integer specifying the starting number of nucleotides of overlap
+                                    to use when linearly tiling with MIPs
+                                    default is 0
+    -check_copy_number              providing "off" enables targeting of non-unique sites in the reference
+    -seal_both_strands              providing "on" disallows targeting arms occupying the same base
+                                    positions on opposite strands
+    -half_seal_both_strands         providing "on" disallows a second targeting arm from occupying more than half
+                                    of the positions of a targeting arm placed on the other strand
+    -double_tile_strand_unaware     providing "on" will ensure that all positions in targeted regions will be tiled twice
+    -double_tile_strands_separately providing "on" will ensure that all positions in targeted regions will be tiled twice,
+                                    at least once on each strand
+    Scoring parameters:
+
+    -score_method                   "logistic" will use the logistic model for scoring (default)
+                                    "svr" will switch behavior to score with the svr model
+                                    "mixed" will first filter with logistic scoring and finalize with the svr model
+    -logistic_optimal_score         value of score metric at which to stop optimizing MIP score and
+                                    accept current MIP, lower scores lead to fewer outliers
+                                    default is 0.98
+    -svr_optimal_score              analogous to logistic_optimal_score
+                                    default is 2.2
+    -logistic_priority_score        value of score metric below which MIPs are placed nonlinearly to
+                                    optimize score and SNPs are tolerated
+                                    default is 0.9,lower values enable more efficient linear tiling
+    -svr_priotity_score             analogous to logistic_priority_score
+                                    default is 1.5 for SVR
+    Miscellaneous:
+
+    -silent_mode                    providing "on" will reduce volume of text output
+    -download_tabix_index           providing "on" will force redownload of common snp tbi file
+                                        DEPRECATED
+    -bwa_threads                    make use of BWA's multithreading option (-t _)
+                                    default is 1
 
 -----
 TERMS OF USE AND LICENSING INFORMATION
