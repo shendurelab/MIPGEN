@@ -15,7 +15,7 @@ if len(sys.argv)<3:
 infile = sys.argv[1]
 prefix = sys.argv[2]
 
-color = {'purple':'106,90,205', 'green':'85,107,47', 'red':'205,92,92', 'gold':'218,165,32', 'blue':'65,105,225', 'orange':'255,69,0', 'pink':'255,105,180', 'brown':'139,69,19', 'snow':'205,203,20'}
+color = {'purple':'106,90,205', 'green':'85,107,47', 'red':'205,92,92', 'gold':'218,165,32', 'blue':'65,105,225', 'orange':'255,69,0', 'pink':'255,105,180', 'brown':'139,69,19', 'snow':'205,203,200'}
 available_colors = color.keys()
 if len(sys.argv) > 3:
 	pluscolor = sys.argv[3]
