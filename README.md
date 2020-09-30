@@ -59,6 +59,8 @@ OTHER NOTES
 
 -if there is at least 10bp of overlap between forward and reverse reads, it is recommended to merge read pairs into fr-reads using PEAR ( http://bioinformatics.oxfordjournals.org/content/early/2013/11/10/bioinformatics.btt593.long ) prior to processing and to utilize single end options
 
+-see the HemoMIPs 2020 analysis pipeline for analyzing MIP sequencing data with html reports and full genotyping results: https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007956
+ 
 -----
 GETTING STARTED
 -----
