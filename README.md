@@ -43,6 +43,8 @@ MIPGEN PITFALLS
 
 -The failure flags in the design files are a series of three bits. They represent, in order, non-uniqueness of the MIP target with respect to the provided genome sequence, inability to design SNP MIPs to any/all of the variants provided in the SNP file, and tandem repeats being detected in the MIP arms using Tandem Repeats Finder. SNP failures will be included in final probe sets. The others will not, assuming non-uniqueness is selected and a TRF executable is provided
 
+-MIPgen does not remove candidate MIPs with overly high targeting arm copy numbers if there are no suitable alternatives to cover the desired regions. Be advised that copy numbers above 200 are likely to poisson your assay and should be removed unless you are specifically interrogating all such low complexity sites.
+
 -----
 OTHER NOTES
 -----
